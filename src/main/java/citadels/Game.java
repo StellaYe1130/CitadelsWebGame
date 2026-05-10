@@ -54,6 +54,9 @@ public class Game{
      * @return the current Player
      */
     public Player getCurrentPlayer(){
+        if (currentPlayer != null) {
+            return currentPlayer;
+        }
         return players.get(currentIndex);
     }
 

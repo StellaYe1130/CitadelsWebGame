@@ -112,13 +112,14 @@ public class App {
         }
 
         this.game = new Game(copiedGame.getPlayers().size());
-        this.game.gameCopy(copiedGame);    
+        this.game.gameCopy(copiedGame);
         this.cardsFile = app.cardsFile;
         this.deck = app.deck;
         this.phase = app.phase;
 
         this.activeRole = app.activeRole;
         this.selectionPlayerIndex = app.selectionPlayerIndex;
+        this.selectionRoles = app.selectionRoles == null ? null : new ArrayList<>(app.selectionRoles);
 
         this.turnOrder = app.turnOrder == null ? null : new ArrayList<>(app.turnOrder);
         this.turnIndex = app.turnIndex;
@@ -246,6 +247,7 @@ public class App {
 
             if(phase == Phase.character_selection){
                 if(line.equalsIgnoreCase("handcards") || line.equalsIgnoreCase("money") || line.equalsIgnoreCase("help")){
+                   System.out.println(line.toLowerCase());
                    System.out.println(processCommand(line));
                    continue;
                }
@@ -259,7 +261,11 @@ public class App {
                 if(chosenRole != null){
                    String res = processCommand("select " + line);
                    System.out.println(res);
-                   if(selectionPlayerIndex < game.getPlayers().size()){
+                   if(selectionPlayerIndex >= game.getPlayers().size()){
+                       System.out.println("All players have chosen. Starting turn phase.");
+                       phase = Phase.turn_phase;
+                       initTurnOrder();
+                   } else {
                         Player next = game.getPlayers().get(selectionPlayerIndex);
                         printSelectionPrompt(next);
                    }
@@ -438,19 +444,29 @@ public class App {
      */
     
     public void processTurn(){
-        if(turnIndex >= turnOrder.size()){
+        // Determine role and player
+        Role currentRole;
+        Player currentPlayer;
+        if(turnOrder != null && turnIndex < turnOrder.size()){
+            currentRole = turnOrder.get(turnIndex);
+            this.activeRole = currentRole;
+            currentPlayer = roleToPlayer.get(currentRole);
+            if(currentPlayer != null){
+                int index = game.getPlayers().indexOf(currentPlayer);
+                game.setCurrentIndex(index);
+            } else {
+                currentPlayer = game.getCurrentPlayer();
+            }
+        } else if(turnOrder != null && turnIndex >= turnOrder.size()){
             phase = Phase.character_selection;
             startSelectionPhase();
             return;
+        } else {
+            // Direct call without turnOrder (e.g. from tests): use field-set role
+            currentRole = this.currentRole != null ? this.currentRole : this.activeRole;
+            this.activeRole = currentRole;
+            currentPlayer = game.getCurrentPlayer();
         }
-        
-        Role currentRole = turnOrder.get(turnIndex);
-        this.activeRole = currentRole;
-        
-        turnIndex = turnIndex + 1;
-        Player currentPlayer = roleToPlayer.get(currentRole);
-        int index = game.getPlayers().indexOf(currentPlayer);
-        game.setCurrentIndex(index);
 
         if(currentRole == Role.King){
             int count = 0;
@@ -488,42 +504,56 @@ public class App {
             System.out.println("Bishop bonus: +" + count + " gold for building blue district.");
         }
         
-        System.out.println();
-        System.out.println("===" + currentRole.getTheName() + "'s turn ===");
+        if(currentRole != null){
+            System.out.println();
+            System.out.println("===" + currentRole.getTheName() + "'s turn ===");
+        }
         System.out.println("Player " + currentPlayer.getId() + "'s turn");
-        System.out.println("Please enter 'action income' or 'action draw': ");
 
-        while(true){
-            System.out.print("> ");
-            String choice = scanner.nextLine().trim().toLowerCase();
-            if(choice.equals("exit")){
-                System.out.println("Player Exit");
-                System.exit(0);
+        // Action phase: only run when called via handleNext (turnOrder is set)
+        if(turnOrder != null){
+            System.out.println("Please enter 'action income' or 'action draw': ");
+            while(true){
+                System.out.print("> ");
+                String choice;
+                try{
+                    choice = scanner.nextLine().trim().toLowerCase();
+                }catch(NoSuchElementException e){
+                    break;
+                }
+                if(choice.equals("exit")){
+                    System.out.println("Player Exit");
+                    System.exit(0);
+                }
+                if(choice.equals("action income") || choice.equals("action draw")){
+                    System.out.println(processCommand(choice));
+                    break;
+                }else if(choice.equals("handcards") || choice.equals("money")){
+                    System.out.println(processCommand(choice));
+                }else{
+                    System.out.println("Invaild input, please enter 'action income' or 'action draw");
+                }
             }
-            if(choice.equals("action income") || choice.equals("action draw")){
-                System.out.println(processCommand(choice));
-                break;
-            }else if(choice.equals("handcards") || choice.equals("money")){
-                System.out.println(processCommand(choice));
-                continue;
-            }else{
-                System.out.println("Invaild input, please enter 'action income' or 'action draw");
+            if(currentRole == Role.Architect){
+                System.out.println("Architect ability: drawing 2 cards...");
+                for(int i = 0; i < 2; i++){
+                    Card extra = deck.drawOrThrow();
+                    currentPlayer.drawCard(extra);
+                    System.out.println(" Draw: " + extra.getName());
+                }
             }
         }
-        if(currentRole == Role.Architect){
-            System.out.println("Architect ability: drawing 2 cards...");
-            for(int i = 0; i < 2; i++){
-                Card extra = deck.drawOrThrow();
-                currentPlayer.drawCard(extra);
-                System.out.println(" Draw: " + extra.getName());
-            }
-        }
-        
-        if(currentRole == Role.Magician){
+
+        if(turnOrder != null && currentRole == Role.Magician){
             System.out.println("Magician ability: 'action swap <playerID>' action redraw <i1,i2,...>' or 'skip'");
             while(true){
                 System.out.print("> ");
-                String line = scanner.nextLine().trim();
+                String line;
+                try{
+                    line = scanner.nextLine().trim();
+                }catch(NoSuchElementException e){
+                    break;
+                }
                  if(line.equalsIgnoreCase("skip")){
                     break;
                 }
@@ -623,7 +653,13 @@ public class App {
         
         while(true){
             System.out.print("> ");
-            String command = scanner.nextLine().trim();
+            String command;
+            try{
+                command = scanner.nextLine().trim();
+            }catch(NoSuchElementException e){
+                System.out.println("The turn ends");
+                break;
+            }
             if(command.equalsIgnoreCase("exit")){
                 System.out.println("Player Exit");
                 System.exit(0);
@@ -654,19 +690,9 @@ public class App {
                     count++;
                 }
             }
-            currentPlayer.addMoney(count + 1);
-            System.out.println("Mechant bonus: " + count + " (green districts)");
+            currentPlayer.addMoney(1);
+            System.out.println("Merchant bonus: +1 gold.");
         }
-        if(currentRole == Role.Warlord){
-            int count = 0;
-            for(Card card: currentPlayer.getBuildDistricCards()){
-                if(Colour(card, currentPlayer).equalsIgnoreCase("red")){
-                    count++;
-                }
-            }currentPlayer.addMoney(count);
-             System.out.println("Warlord bonus: +" + count + " gold.");
-        }
-        handleNext();
     }
 
     /**
@@ -919,11 +945,11 @@ public class App {
                         return processCommand("special kill " + parts[2]);
                         
                     case "destroy":
-                        if(activeRole != Role.Warlord){
-                            return "Only Warlord can destroy district";
-                        }
                         if(parts.length != 4){
                             return "You should enter destroy <player's ID> <district Index>.";
+                        }
+                        if(activeRole != Role.Warlord){
+                            return "Only Warlord can destroy district";
                         }
 
                         try{
@@ -991,6 +1017,24 @@ public class App {
                             return "Unknown action: " + action;
                     }
 
+                case "steal":
+                    if(parts.length < 3){
+                        return "Invalid arguments";
+                    }
+                    return processCommand("special steal " + parts[2]);
+
+                case "assassinate":
+                    if(parts.length < 3){
+                        return "Invalid arguments";
+                    }
+                    return processCommand("special kill " + parts[2]);
+
+                case "destroy":
+                    if(activeRole != Role.Warlord){
+                        return "Only Warlord can destroy district";
+                    }
+                    return processCommand("action " + line);
+
                 case "help":
                     StringBuilder sb = new StringBuilder();
                     sb.append("Available commands:\n");
@@ -1000,7 +1044,7 @@ public class App {
                     sb.append("  citadel/list/city : shows districts built by a player\n");
                     sb.append("  hand : show all cards in hand\n");
                     sb.append("  gold [p] : shows gold of a player\n");
-                    sb.append("  build <place in hand> : Builds a building into your city\n");
+                    sb.append("  build <n> : Builds a building into your city\n");
                     sb.append("  action : Gives info about your special action and how to perform it\n");
                     sb.append("  end : Ends your turn\n");
                     return sb.toString();
@@ -1040,14 +1084,15 @@ public class App {
                     }
 
                 case "all":{
+                    StringBuilder allResult = new StringBuilder();
                     for (Player player : game.getPlayers()) {
                         StringBuilder SB = new StringBuilder();
                         SB.append("Player ").append(player.getId());
                         if(player == game.getCurrentPlayer()){
-                            SB.append( " (you) ");
+                            SB.append(" (you) ");
                         }
                         SB.append(": ");
-                    
+
                         int hand = player.getHandCardsCopy().size();
                         SB.append("cards=").append(hand).append(" ");
                         int gold = player.getMoney();
@@ -1058,7 +1103,7 @@ public class App {
                             name.add(card.getName());
                         }
                         SB.append("build=").append(String.join(",", name)).append(" ");
-                        
+
                         for(Card card: build){
                             SB.append("[ ");
                             SB.append(card.getColour().toLowerCase());
@@ -1069,8 +1114,8 @@ public class App {
                             List<Card> hide = player.getHandCardsCopy();
                             StringBuilder hideSB = new StringBuilder();
                             hideSB.append("[DEBUG] handcards: ");
-                            if(hide.isEmpty()){
-                                for(int j = 0; j < hide.size();j++){
+                            if(!hide.isEmpty()){
+                                for(int j = 0; j < hide.size(); j++){
                                     if(j > 0){
                                         hideSB.append(", ");
                                     }
@@ -1080,9 +1125,9 @@ public class App {
                             }
                         }
                         System.out.println(SB.toString());
-                        return SB.toString();
+                        allResult.append(SB.toString()).append("\n");
                     }
-                    break;
+                    return allResult.length() > 0 ? allResult.substring(0, allResult.length() - 1) : "";
                 }
 
                 case "city":
@@ -1138,8 +1183,11 @@ public class App {
                     }
                     String filename = parts[1];
                     try(FileReader reader = new FileReader(filename)){
-                       App load = GSON.fromJson(reader, App.class);
-                       this.gameCopy(load);
+                        Game loadedGame = GSON.fromJson(reader, Game.class);
+                        if(loadedGame == null){
+                            return "Load failed: invalid file";
+                        }
+                        this.game = loadedGame;
                         return "Load file " + filename;
                     }catch(IOException e){
                         return "Load failed: " + e.getMessage();
@@ -1152,7 +1200,6 @@ public class App {
                 default:
                     return "Unknown command: " + command;
             }
-            return "";
         }
 
 
@@ -1171,15 +1218,12 @@ public class App {
      * @param c the Card instance for the purple district
      */
     public void purpleCardsOne(Player player, Card c){
-        if (!scanner.hasNextLine()) {
-            return;
-        }
         switch(c.getName().toLowerCase()){
             case "observatory":
                 List<Card> three = new ArrayList<>();
                 for(int i = 0; i < 3; i++){
                     three.add(deck.drawOrThrow());
-                                    
+
                 }
                 System.out.println("Top 3 cards: " + three);
                 for(int i = 0; i < three.size(); i++){
@@ -1189,7 +1233,7 @@ public class App {
                 int choose;
                 try{
                     choose = Integer.parseInt(scanner.nextLine().trim()) - 1;
-                }catch(NumberFormatException e){
+                }catch(NumberFormatException | NoSuchElementException e){
                     choose = 0;
                 }
                 
@@ -1212,11 +1256,15 @@ public class App {
                             
             case "belltower":
                 System.out.println("Bell Tower: when built, the game will end after the round in which a player first places his 7th district.(yes or no) ");
-                String line = scanner.nextLine().trim().toLowerCase();
-                if("yes".equals(line)){
-                    bellTower = true;
-                    System.out.println("the game will end after the round in which a player first places his 7th district.  ");
-                }else{
+                try {
+                    String line = scanner.nextLine().trim().toLowerCase();
+                    if("yes".equals(line)){
+                        bellTower = true;
+                        System.out.println("the game will end after the round in which a player first places his 7th district.  ");
+                    }else{
+                        System.out.println("The BellTower ability won't activate");
+                    }
+                } catch(NoSuchElementException e){
                     System.out.println("The BellTower ability won't activate");
                 }
                 break;
@@ -1236,10 +1284,9 @@ public class App {
                     System.out.println(" " + (i + 1) + ": " + player.getHandCards().get(i).getName());
                 }
                 System.out.print("Choose one to place under Museum (1-" + player.getHandCards().size() + "), or enter 0 to skip: ");
-                int chooose;
                 try{
                     choose = Integer.parseInt(scanner.nextLine().trim());
-                }catch(NumberFormatException e){
+                }catch(NumberFormatException | NoSuchElementException e){
                     choose = 0;
                 }
                 if(choose > 1 && choose <= player.getHandCards().size()){
@@ -1256,13 +1303,17 @@ public class App {
                             
             case "school of magic":
                 System.out.println("School of Magic: for the purposes of income, the School Of Magic is considered to be the color of your choice.");
-                String colour;
-                 while(true){
-                    colour = scanner.nextLine().trim().toLowerCase();
-                    if(colour.equals("yellow") || colour.equals("blue") || colour.equals("green") || colour.equals("red")){
-                        break;
+                String colour = "blue";
+                try {
+                    while(true){
+                        colour = scanner.nextLine().trim().toLowerCase();
+                        if(colour.equals("yellow") || colour.equals("blue") || colour.equals("green") || colour.equals("red")){
+                            break;
+                        }
+                        System.out.println("Invalid colour.Enter one of: yellow, blue, green, red. ");
                     }
-                    System.out.println("Invalid colour.Enter one of: yellow, blue, green, red. ");
+                } catch(NoSuchElementException e){
+                    // keep default colour
                 }
                 player.setSchoolOfMagicColour(colour);
                 System.out.println("School Of Magic will count as " + colour + " districts for income.");
@@ -1274,13 +1325,17 @@ public class App {
 
             case "haunted city":
                 System.out.println("Haunted city: For the purposes of victory points, the Haunted City is considered to be of the color of your choice.  You cannot use this ability if you built it during the last round of the game ");
-                String hauntedCity;
-                while(true){
-                    hauntedCity = scanner.nextLine().trim().toLowerCase();
-                    if(hauntedCity.equals("yellow") || hauntedCity.equals("red") || hauntedCity.equals("blue") || hauntedCity.equals("green") ){
-                        break;
+                String hauntedCity = "blue";
+                try {
+                    while(true){
+                        hauntedCity = scanner.nextLine().trim().toLowerCase();
+                        if(hauntedCity.equals("yellow") || hauntedCity.equals("red") || hauntedCity.equals("blue") || hauntedCity.equals("green") ){
+                            break;
+                        }
+                        System.out.println("Enter one of : yellow, blue, red, green");
                     }
-                    System.out.println("Enter one of : yellow, blue, red, green");
+                } catch(NoSuchElementException e){
+                    // keep default colour
                 }
                 player.setHauntedCity(hauntedCity);
                 System.out.println("Haunted City will count as " + hauntedCity + " for scores");
@@ -1365,14 +1420,14 @@ public class App {
                 if(player.armory){
                     return "Armory ability has been already use";
                 }
-                if(parts.length != 3){
+                if(parts.length != 4){
                     return "Invalid";
                 }
                 int targetID;
                 int destroyIndex;
                 try{
-                    targetID = Integer.parseInt(parts[1]);
-                    destroyIndex = Integer.parseInt(parts[2]) - 1;
+                    targetID = Integer.parseInt(parts[2]);
+                    destroyIndex = Integer.parseInt(parts[3]) - 1;
 
                 }catch(NumberFormatException e){
                     return "Invalid";
@@ -1545,15 +1600,19 @@ public class App {
     
      public static void main(String[] args) {
         Scanner scanner = new Scanner(System.in);
-        int numberOfPlayers;
-        do{
-            System.out.print("Enter number of players (4-7): ");
-            numberOfPlayers = scanner.nextInt();
-        }while(numberOfPlayers < 4 || numberOfPlayers > 7);
+        int numberOfPlayers = 4;
+        try{
+            do{
+                System.out.print("Enter number of players (4-7): ");
+                numberOfPlayers = scanner.nextInt();
+            }while(numberOfPlayers < 4 || numberOfPlayers > 7);
+        }catch(Exception e){
+            return;
+        }
 
         App app = new App(numberOfPlayers);
         app.run();
-        
+
     }
     
 

@@ -1,234 +1,234 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<testsuite name="citadels.SampleTest" tests="181" skipped="0" failures="0" errors="0" timestamp="2026-05-10T13:53:51" hostname="yedemacbook-air.shared.sydney.edu.au" time="2.261">
+<testsuite name="citadels.SampleTest" tests="181" skipped="0" failures="0" errors="0" timestamp="2026-05-10T14:14:47" hostname="yedemacbook-air.shared.sydney.edu.au" time="1.23">
   <properties/>
-  <testcase name="testSaveInvalidInput()" classname="citadels.SampleTest" time="0.585"/>
-  <testcase name="testCitadelsInvalidPlayerId()" classname="citadels.SampleTest" time="0.01"/>
-  <testcase name="testArchitectDraw()" classname="citadels.SampleTest" time="0.046"/>
-  <testcase name="testCitadelsNoBuiltDistricts()" classname="citadels.SampleTest" time="0.117"/>
-  <testcase name="testCommandGold()" classname="citadels.SampleTest" time="0.045"/>
-  <testcase name="testCommandHand()" classname="citadels.SampleTest" time="0.014"/>
-  <testcase name="testAllCommandBuildListing()" classname="citadels.SampleTest" time="0.008"/>
-  <testcase name="testPrintBuildDistrictsNonEmpty()" classname="citadels.SampleTest" time="0.007"/>
-  <testcase name="testSettersAndRealizeCommand()" classname="citadels.SampleTest" time="0.024"/>
-  <testcase name="testCitadelsInvalidArguments()" classname="citadels.SampleTest" time="0.016"/>
-  <testcase name="testColour_HauntedCity()" classname="citadels.SampleTest" time="0.007"/>
-  <testcase name="testPoorHouseGivesOneGoldAtEnd()" classname="citadels.SampleTest" time="0.006"/>
-  <testcase name="testNextPlayer()" classname="citadels.SampleTest" time="0.006"/>
-  <testcase name="testColourDefault()" classname="citadels.SampleTest" time="0.009"/>
-  <testcase name="testBuildDistrictCardsNull()" classname="citadels.SampleTest" time="0.011"/>
-  <testcase name="testMerchantIncome()" classname="citadels.SampleTest" time="0.007"/>
-  <testcase name="testActionIncome()" classname="citadels.SampleTest" time="0.013"/>
-  <testcase name="testGameCopyThrowsOnNull()" classname="citadels.SampleTest" time="0.014"/>
+  <testcase name="testSaveInvalidInput()" classname="citadels.SampleTest" time="0.376"/>
+  <testcase name="testCitadelsInvalidPlayerId()" classname="citadels.SampleTest" time="0.008"/>
+  <testcase name="testArchitectDraw()" classname="citadels.SampleTest" time="0.012"/>
+  <testcase name="testCitadelsNoBuiltDistricts()" classname="citadels.SampleTest" time="0.015"/>
+  <testcase name="testCommandGold()" classname="citadels.SampleTest" time="0.006"/>
+  <testcase name="testCommandHand()" classname="citadels.SampleTest" time="0.006"/>
+  <testcase name="testAllCommandBuildListing()" classname="citadels.SampleTest" time="0.006"/>
+  <testcase name="testPrintBuildDistrictsNonEmpty()" classname="citadels.SampleTest" time="0.005"/>
+  <testcase name="testSettersAndRealizeCommand()" classname="citadels.SampleTest" time="0.025"/>
+  <testcase name="testCitadelsInvalidArguments()" classname="citadels.SampleTest" time="0.006"/>
+  <testcase name="testColour_HauntedCity()" classname="citadels.SampleTest" time="0.004"/>
+  <testcase name="testPoorHouseGivesOneGoldAtEnd()" classname="citadels.SampleTest" time="0.004"/>
+  <testcase name="testNextPlayer()" classname="citadels.SampleTest" time="0.005"/>
+  <testcase name="testColourDefault()" classname="citadels.SampleTest" time="0.003"/>
+  <testcase name="testBuildDistrictCardsNull()" classname="citadels.SampleTest" time="0.009"/>
+  <testcase name="testMerchantIncome()" classname="citadels.SampleTest" time="0.005"/>
+  <testcase name="testActionIncome()" classname="citadels.SampleTest" time="0.004"/>
+  <testcase name="testGameCopyThrowsOnNull()" classname="citadels.SampleTest" time="0.01"/>
   <testcase name="testSelectRoleAndDuplicate()" classname="citadels.SampleTest" time="0.004"/>
   <testcase name="testBishopBonus()" classname="citadels.SampleTest" time="0.006"/>
-  <testcase name="testEndAndCheckOver()" classname="citadels.SampleTest" time="0.01"/>
-  <testcase name="testFactoryDiscount()" classname="citadels.SampleTest" time="0.013"/>
-  <testcase name="testInvalidHandIndex()" classname="citadels.SampleTest" time="0.008"/>
-  <testcase name="testInfoHandCardByName()" classname="citadels.SampleTest" time="0.011"/>
-  <testcase name="testEndMethodDoesNotCrash()" classname="citadels.SampleTest" time="0.008"/>
-  <testcase name="testKillSuccess()" classname="citadels.SampleTest" time="0.008"/>
-  <testcase name="testMagicianAbility()" classname="citadels.SampleTest" time="0.005"/>
-  <testcase name="testActivateAndHandleNext()" classname="citadels.SampleTest" time="0.007"/>
-  <testcase name="testGameOverWithMuseum()" classname="citadels.SampleTest" time="0.006"/>
-  <testcase name="testInvalidSpecialCommand()" classname="citadels.SampleTest" time="0.005"/>
-  <testcase name="testStealAliasForwardsToSpecial()" classname="citadels.SampleTest" time="0.005"/>
-  <testcase name="testRunExitAndShortcuts()" classname="citadels.SampleTest" time="0.006"/>
-  <testcase name="testUseCommand()" classname="citadels.SampleTest" time="0.004"/>
-  <testcase name="testPurpleCardsOneSkipInteraction()" classname="citadels.SampleTest" time="0.005"/>
-  <testcase name="testDragonGate()" classname="citadels.SampleTest" time="0.004"/>
-  <testcase name="testColourSchoolOfMagic()" classname="citadels.SampleTest" time="0.004"/>
-  <testcase name="testUnknownCommand()" classname="citadels.SampleTest" time="0.008"/>
-  <testcase name="testAssassinAbility()" classname="citadels.SampleTest" time="0.004"/>
-  <testcase name="testThroneRoom()" classname="citadels.SampleTest" time="0.01"/>
-  <testcase name="testRoleAbility()" classname="citadels.SampleTest" time="0.016"/>
+  <testcase name="testEndAndCheckOver()" classname="citadels.SampleTest" time="0.011"/>
+  <testcase name="testFactoryDiscount()" classname="citadels.SampleTest" time="0.005"/>
+  <testcase name="testInvalidHandIndex()" classname="citadels.SampleTest" time="0.004"/>
+  <testcase name="testInfoHandCardByName()" classname="citadels.SampleTest" time="0.003"/>
+  <testcase name="testEndMethodDoesNotCrash()" classname="citadels.SampleTest" time="0.003"/>
+  <testcase name="testKillSuccess()" classname="citadels.SampleTest" time="0.004"/>
+  <testcase name="testMagicianAbility()" classname="citadels.SampleTest" time="0.004"/>
+  <testcase name="testActivateAndHandleNext()" classname="citadels.SampleTest" time="0.004"/>
+  <testcase name="testGameOverWithMuseum()" classname="citadels.SampleTest" time="0.004"/>
+  <testcase name="testInvalidSpecialCommand()" classname="citadels.SampleTest" time="0.003"/>
+  <testcase name="testStealAliasForwardsToSpecial()" classname="citadels.SampleTest" time="0.004"/>
+  <testcase name="testRunExitAndShortcuts()" classname="citadels.SampleTest" time="0.005"/>
+  <testcase name="testUseCommand()" classname="citadels.SampleTest" time="0.007"/>
+  <testcase name="testPurpleCardsOneSkipInteraction()" classname="citadels.SampleTest" time="0.004"/>
+  <testcase name="testDragonGate()" classname="citadels.SampleTest" time="0.003"/>
+  <testcase name="testColourSchoolOfMagic()" classname="citadels.SampleTest" time="0.003"/>
+  <testcase name="testUnknownCommand()" classname="citadels.SampleTest" time="0.003"/>
+  <testcase name="testAssassinAbility()" classname="citadels.SampleTest" time="0.006"/>
+  <testcase name="testThroneRoom()" classname="citadels.SampleTest" time="0.003"/>
+  <testcase name="testRoleAbility()" classname="citadels.SampleTest" time="0.002"/>
   <testcase name="testMoney()" classname="citadels.SampleTest" time="0.003"/>
-  <testcase name="testBellTowerNo()" classname="citadels.SampleTest" time="0.006"/>
-  <testcase name="testRoles()" classname="citadels.SampleTest" time="0.007"/>
-  <testcase name="testQuarryAllowsOneDuplicate()" classname="citadels.SampleTest" time="0.008"/>
-  <testcase name="testKing()" classname="citadels.SampleTest" time="0.003"/>
+  <testcase name="testBellTowerNo()" classname="citadels.SampleTest" time="0.003"/>
+  <testcase name="testRoles()" classname="citadels.SampleTest" time="0.003"/>
+  <testcase name="testQuarryAllowsOneDuplicate()" classname="citadels.SampleTest" time="0.002"/>
+  <testcase name="testKing()" classname="citadels.SampleTest" time="0.001"/>
   <testcase name="testRole()" classname="citadels.SampleTest" time="0.002"/>
-  <testcase name="testGameCopy()" classname="citadels.SampleTest" time="0.012"/>
-  <testcase name="testArchitectDrawAbility()" classname="citadels.SampleTest" time="0.007"/>
-  <testcase name="testSpendMoneyNegative()" classname="citadels.SampleTest" time="0.006"/>
-  <testcase name="testGameCopyIndependent()" classname="citadels.SampleTest" time="0.01"/>
-  <testcase name="testLoadInvalidInput()" classname="citadels.SampleTest" time="0.008"/>
-  <testcase name="testParkDrawsTwoCardsAtEnd()" classname="citadels.SampleTest" time="0.017"/>
-  <testcase name="testArmoryAbility()" classname="citadels.SampleTest" time="0.005"/>
-  <testcase name="testGameOverAtEight()" classname="citadels.SampleTest" time="0.007"/>
-  <testcase name="testActivateNoException()" classname="citadels.SampleTest" time="0.005"/>
-  <testcase name="testSetCurrentPlayerAndGet()" classname="citadels.SampleTest" time="0.002"/>
-  <testcase name="testMainValidFirst()" classname="citadels.SampleTest" time="0.007"/>
+  <testcase name="testGameCopy()" classname="citadels.SampleTest" time="0.004"/>
+  <testcase name="testArchitectDrawAbility()" classname="citadels.SampleTest" time="0.01"/>
+  <testcase name="testSpendMoneyNegative()" classname="citadels.SampleTest" time="0.002"/>
+  <testcase name="testGameCopyIndependent()" classname="citadels.SampleTest" time="0.003"/>
+  <testcase name="testLoadInvalidInput()" classname="citadels.SampleTest" time="0.004"/>
+  <testcase name="testParkDrawsTwoCardsAtEnd()" classname="citadels.SampleTest" time="0.006"/>
+  <testcase name="testArmoryAbility()" classname="citadels.SampleTest" time="0.004"/>
+  <testcase name="testGameOverAtEight()" classname="citadels.SampleTest" time="0.003"/>
+  <testcase name="testActivateNoException()" classname="citadels.SampleTest" time="0.003"/>
+  <testcase name="testSetCurrentPlayerAndGet()" classname="citadels.SampleTest" time="0.003"/>
+  <testcase name="testMainValidFirst()" classname="citadels.SampleTest" time="0.006"/>
   <testcase name="testProcessCommandHelp()" classname="citadels.SampleTest" time="0.003"/>
-  <testcase name="testBuildTriggersBuildCount()" classname="citadels.SampleTest" time="0.003"/>
-  <testcase name="testWarlordBonus()" classname="citadels.SampleTest" time="0.003"/>
-  <testcase name="testBuildInvalidArg()" classname="citadels.SampleTest" time="0.004"/>
+  <testcase name="testBuildTriggersBuildCount()" classname="citadels.SampleTest" time="0.002"/>
+  <testcase name="testWarlordBonus()" classname="citadels.SampleTest" time="0.002"/>
+  <testcase name="testBuildInvalidArg()" classname="citadels.SampleTest" time="0.003"/>
   <testcase name="testArchitectBuildsThreeTimes()" classname="citadels.SampleTest" time="0.003"/>
-  <testcase name="testBishopAbility()" classname="citadels.SampleTest" time="0.016"/>
-  <testcase name="testUniversity()" classname="citadels.SampleTest" time="0.003"/>
-  <testcase name="testKingAbility()" classname="citadels.SampleTest" time="0.009"/>
-  <testcase name="testSetCurrentIndex()" classname="citadels.SampleTest" time="0.004"/>
+  <testcase name="testBishopAbility()" classname="citadels.SampleTest" time="0.003"/>
+  <testcase name="testUniversity()" classname="citadels.SampleTest" time="0.009"/>
+  <testcase name="testKingAbility()" classname="citadels.SampleTest" time="0.004"/>
+  <testcase name="testSetCurrentIndex()" classname="citadels.SampleTest" time="0.002"/>
   <testcase name="testProcessTurn()" classname="citadels.SampleTest" time="0.003"/>
   <testcase name="testProcessCommandUnknownAction()" classname="citadels.SampleTest" time="0.003"/>
-  <testcase name="testColourSpecialCases()" classname="citadels.SampleTest" time="0.014"/>
+  <testcase name="testColourSpecialCases()" classname="citadels.SampleTest" time="0.004"/>
   <testcase name="testStealFromNullVictim()" classname="citadels.SampleTest" time="0.004"/>
-  <testcase name="testResetRolesAndGetPlayersCopy()" classname="citadels.SampleTest" time="0.004"/>
+  <testcase name="testResetRolesAndGetPlayersCopy()" classname="citadels.SampleTest" time="0.003"/>
   <testcase name="testEndCommandExitsTurn()" classname="citadels.SampleTest" time="0.003"/>
-  <testcase name="testSaveGameInvalidPath()" classname="citadels.SampleTest" time="0.006"/>
-  <testcase name="testBuildInvalidIndex()" classname="citadels.SampleTest" time="0.003"/>
-  <testcase name="testMerchantBonus()" classname="citadels.SampleTest" time="0.003"/>
-  <testcase name="testAssassinateAliasForwardsToSpecial()" classname="citadels.SampleTest" time="0.003"/>
-  <testcase name="testLibraryEffect()" classname="citadels.SampleTest" time="0.004"/>
-  <testcase name="testCardToString()" classname="citadels.SampleTest" time="0.002"/>
-  <testcase name="testMainDoesNotCrash()" classname="citadels.SampleTest" time="0.016"/>
-  <testcase name="testLibrary()" classname="citadels.SampleTest" time="0.004"/>
-  <testcase name="testQuarryLibraryThroneRoomHelpText()" classname="citadels.SampleTest" time="0.004"/>
+  <testcase name="testSaveGameInvalidPath()" classname="citadels.SampleTest" time="0.005"/>
+  <testcase name="testBuildInvalidIndex()" classname="citadels.SampleTest" time="0.002"/>
+  <testcase name="testMerchantBonus()" classname="citadels.SampleTest" time="0.004"/>
+  <testcase name="testAssassinateAliasForwardsToSpecial()" classname="citadels.SampleTest" time="0.004"/>
+  <testcase name="testLibraryEffect()" classname="citadels.SampleTest" time="0.003"/>
+  <testcase name="testCardToString()" classname="citadels.SampleTest" time="0.001"/>
+  <testcase name="testMainDoesNotCrash()" classname="citadels.SampleTest" time="0.004"/>
+  <testcase name="testLibrary()" classname="citadels.SampleTest" time="0.003"/>
+  <testcase name="testQuarryLibraryThroneRoomHelpText()" classname="citadels.SampleTest" time="0.003"/>
   <testcase name="testBellTower()" classname="citadels.SampleTest" time="0.004"/>
-  <testcase name="testNextPlayerCycles()" classname="citadels.SampleTest" time="0.001"/>
-  <testcase name="testGamePlayer()" classname="citadels.SampleTest" time="0.003"/>
-  <testcase name="testHauntedCity()" classname="citadels.SampleTest" time="0.026"/>
-  <testcase name="testBuildExceedLimit()" classname="citadels.SampleTest" time="0.016"/>
-  <testcase name="testDestroyWithoutWarlord()" classname="citadels.SampleTest" time="0.004"/>
-  <testcase name="testValueOf()" classname="citadels.SampleTest" time="0.005"/>
+  <testcase name="testNextPlayerCycles()" classname="citadels.SampleTest" time="0.002"/>
+  <testcase name="testGamePlayer()" classname="citadels.SampleTest" time="0.001"/>
+  <testcase name="testHauntedCity()" classname="citadels.SampleTest" time="0.003"/>
+  <testcase name="testBuildExceedLimit()" classname="citadels.SampleTest" time="0.004"/>
+  <testcase name="testDestroyWithoutWarlord()" classname="citadels.SampleTest" time="0.005"/>
+  <testcase name="testValueOf()" classname="citadels.SampleTest" time="0.003"/>
   <testcase name="testInfoMissingArgument()" classname="citadels.SampleTest" time="0.003"/>
   <testcase name="testDrawCard()" classname="citadels.SampleTest" time="0.002"/>
-  <testcase name="testCommandInfoPurple()" classname="citadels.SampleTest" time="0.004"/>
-  <testcase name="testBuildDuplicateWithQuarry()" classname="citadels.SampleTest" time="0.021"/>
-  <testcase name="testDestroyUsageAndPermission()" classname="citadels.SampleTest" time="0.004"/>
+  <testcase name="testCommandInfoPurple()" classname="citadels.SampleTest" time="0.003"/>
+  <testcase name="testBuildDuplicateWithQuarry()" classname="citadels.SampleTest" time="0.003"/>
+  <testcase name="testDestroyUsageAndPermission()" classname="citadels.SampleTest" time="0.003"/>
   <testcase name="testDrawOrThrowEmptyDeck()" classname="citadels.SampleTest" time="0.002"/>
   <testcase name="testArchitectAbility()" classname="citadels.SampleTest" time="0.003"/>
   <testcase name="testDeckShuffle()" classname="citadels.SampleTest" time="0.005"/>
-  <testcase name="testUnknownSpecial()" classname="citadels.SampleTest" time="0.004"/>
+  <testcase name="testUnknownSpecial()" classname="citadels.SampleTest" time="0.003"/>
   <testcase name="testMuseumPlaceAndSkip()" classname="citadels.SampleTest" time="0.004"/>
-  <testcase name="testHospitalEffect()" classname="citadels.SampleTest" time="0.003"/>
-  <testcase name="testGameOverMethodCall()" classname="citadels.SampleTest" time="0.004"/>
-  <testcase name="testSaveAndLoadWorkflow()" classname="citadels.SampleTest" time="0.115"/>
+  <testcase name="testHospitalEffect()" classname="citadels.SampleTest" time="0.002"/>
+  <testcase name="testGameOverMethodCall()" classname="citadels.SampleTest" time="0.002"/>
+  <testcase name="testSaveAndLoadWorkflow()" classname="citadels.SampleTest" time="0.08"/>
   <testcase name="testLighthouseAbility()" classname="citadels.SampleTest" time="0.002"/>
-  <testcase name="testSelectChosenRole()" classname="citadels.SampleTest" time="0.005"/>
-  <testcase name="testRunCharacterSelectionCommandsAndComplete()" classname="citadels.SampleTest" time="0.024"/>
-  <testcase name="testInfoCommandByIndexBuiltCard()" classname="citadels.SampleTest" time="0.006"/>
-  <testcase name="testLaboratoryAbility()" classname="citadels.SampleTest" time="0.003"/>
-  <testcase name="testGameOverPurpleBonuses()" classname="citadels.SampleTest" time="0.004"/>
-  <testcase name="testSmithyAbility()" classname="citadels.SampleTest" time="0.004"/>
-  <testcase name="testColour_SchoolOfMagic()" classname="citadels.SampleTest" time="0.003"/>
-  <testcase name="testParseCardsError()" classname="citadels.SampleTest" time="0.005"/>
-  <testcase name="testParseCardsFirst()" classname="citadels.SampleTest" time="0.004"/>
-  <testcase name="testAssassinateInvalidArguments()" classname="citadels.SampleTest" time="0.007"/>
-  <testcase name="testRoleList()" classname="citadels.SampleTest" time="0.003"/>
+  <testcase name="testSelectChosenRole()" classname="citadels.SampleTest" time="0.003"/>
+  <testcase name="testRunCharacterSelectionCommandsAndComplete()" classname="citadels.SampleTest" time="0.002"/>
+  <testcase name="testInfoCommandByIndexBuiltCard()" classname="citadels.SampleTest" time="0.002"/>
+  <testcase name="testLaboratoryAbility()" classname="citadels.SampleTest" time="0.002"/>
+  <testcase name="testGameOverPurpleBonuses()" classname="citadels.SampleTest" time="0.003"/>
+  <testcase name="testSmithyAbility()" classname="citadels.SampleTest" time="0.002"/>
+  <testcase name="testColour_SchoolOfMagic()" classname="citadels.SampleTest" time="0.002"/>
+  <testcase name="testParseCardsError()" classname="citadels.SampleTest" time="0.003"/>
+  <testcase name="testParseCardsFirst()" classname="citadels.SampleTest" time="0.003"/>
+  <testcase name="testAssassinateInvalidArguments()" classname="citadels.SampleTest" time="0.002"/>
+  <testcase name="testRoleList()" classname="citadels.SampleTest" time="0.002"/>
   <testcase name="testRoleRank()" classname="citadels.SampleTest" time="0.002"/>
-  <testcase name="testSchoolOfMagic()" classname="citadels.SampleTest" time="0.008"/>
-  <testcase name="testCommand()" classname="citadels.SampleTest" time="0.012"/>
-  <testcase name="testTOString()" classname="citadels.SampleTest" time="0.001"/>
-  <testcase name="testGetOtherPlayer()" classname="citadels.SampleTest" time="0.002"/>
-  <testcase name="testDestroyWithoutWarlordRole()" classname="citadels.SampleTest" time="0.002"/>
-  <testcase name="testInformationCommand_missingArgument()" classname="citadels.SampleTest" time="0.004"/>
+  <testcase name="testSchoolOfMagic()" classname="citadels.SampleTest" time="0.002"/>
+  <testcase name="testCommand()" classname="citadels.SampleTest" time="0.003"/>
+  <testcase name="testTOString()" classname="citadels.SampleTest" time="0.002"/>
+  <testcase name="testGetOtherPlayer()" classname="citadels.SampleTest" time="0.001"/>
+  <testcase name="testDestroyWithoutWarlordRole()" classname="citadels.SampleTest" time="0.003"/>
+  <testcase name="testInformationCommand_missingArgument()" classname="citadels.SampleTest" time="0.002"/>
   <testcase name="testKingBonus()" classname="citadels.SampleTest" time="0.004"/>
   <testcase name="testBuildCommand()" classname="citadels.SampleTest" time="0.004"/>
-  <testcase name="testProcessCommandHandcardsAlias()" classname="citadels.SampleTest" time="0.004"/>
-  <testcase name="testChosenRoleAndGetRoleFor()" classname="citadels.SampleTest" time="0.045"/>
-  <testcase name="testDestroyDirectly()" classname="citadels.SampleTest" time="0.01"/>
-  <testcase name="testStealZeroMoney()" classname="citadels.SampleTest" time="0.005"/>
-  <testcase name="testKingIncome()" classname="citadels.SampleTest" time="0.005"/>
-  <testcase name="testFirstCard()" classname="citadels.SampleTest" time="0.004"/>
-  <testcase name="testCardsCount()" classname="citadels.SampleTest" time="0.004"/>
-  <testcase name="testProcessTurnDoesNotCrash()" classname="citadels.SampleTest" time="0.003"/>
-  <testcase name="testSchoolOfMagicAndHauntedCity()" classname="citadels.SampleTest" time="0.005"/>
-  <testcase name="testGameCopyNormal()" classname="citadels.SampleTest" time="0.008"/>
-  <testcase name="testMagicianBranchEntered()" classname="citadels.SampleTest" time="0.003"/>
-  <testcase name="testSelectUnknownRole()" classname="citadels.SampleTest" time="0.003"/>
-  <testcase name="testCitadelsHasBuiltDistricts()" classname="citadels.SampleTest" time="0.008"/>
-  <testcase name="testUseNoException()" classname="citadels.SampleTest" time="0.008"/>
-  <testcase name="testLighthouseEffect()" classname="citadels.SampleTest" time="0.002"/>
-  <testcase name="testUnknownRole()" classname="citadels.SampleTest" time="0.004"/>
+  <testcase name="testProcessCommandHandcardsAlias()" classname="citadels.SampleTest" time="0.002"/>
+  <testcase name="testChosenRoleAndGetRoleFor()" classname="citadels.SampleTest" time="0.001"/>
+  <testcase name="testDestroyDirectly()" classname="citadels.SampleTest" time="0.003"/>
+  <testcase name="testStealZeroMoney()" classname="citadels.SampleTest" time="0.002"/>
+  <testcase name="testKingIncome()" classname="citadels.SampleTest" time="0.003"/>
+  <testcase name="testFirstCard()" classname="citadels.SampleTest" time="0.003"/>
+  <testcase name="testCardsCount()" classname="citadels.SampleTest" time="0.003"/>
+  <testcase name="testProcessTurnDoesNotCrash()" classname="citadels.SampleTest" time="0.002"/>
+  <testcase name="testSchoolOfMagicAndHauntedCity()" classname="citadels.SampleTest" time="0.003"/>
+  <testcase name="testGameCopyNormal()" classname="citadels.SampleTest" time="0.005"/>
+  <testcase name="testMagicianBranchEntered()" classname="citadels.SampleTest" time="0.002"/>
+  <testcase name="testSelectUnknownRole()" classname="citadels.SampleTest" time="0.002"/>
+  <testcase name="testCitadelsHasBuiltDistricts()" classname="citadels.SampleTest" time="0.002"/>
+  <testcase name="testUseNoException()" classname="citadels.SampleTest" time="0.002"/>
+  <testcase name="testLighthouseEffect()" classname="citadels.SampleTest" time="0.003"/>
+  <testcase name="testUnknownRole()" classname="citadels.SampleTest" time="0.002"/>
   <testcase name="testColourLowercases()" classname="citadels.SampleTest" time="0.003"/>
-  <testcase name="testHandleNextSkipMultipleAssassinated()" classname="citadels.SampleTest" time="0.005"/>
-  <testcase name="testColourHauntedCity()" classname="citadels.SampleTest" time="0.006"/>
-  <testcase name="testBuildInvalidNumber()" classname="citadels.SampleTest" time="0.002"/>
-  <testcase name="testActionDraw()" classname="citadels.SampleTest" time="0.006"/>
+  <testcase name="testHandleNextSkipMultipleAssassinated()" classname="citadels.SampleTest" time="0.003"/>
+  <testcase name="testColourHauntedCity()" classname="citadels.SampleTest" time="0.002"/>
+  <testcase name="testBuildInvalidNumber()" classname="citadels.SampleTest" time="0.003"/>
+  <testcase name="testActionDraw()" classname="citadels.SampleTest" time="0.002"/>
   <testcase name="testHandleNextHospitalBranch()" classname="citadels.SampleTest" time="0.003"/>
-  <testcase name="testCheckOverNoException()" classname="citadels.SampleTest" time="0.006"/>
-  <testcase name="testRunExit()" classname="citadels.SampleTest" time="0.004"/>
-  <testcase name="testPrintBuildDistrictsEmpty()" classname="citadels.SampleTest" time="0.004"/>
-  <testcase name="testBishopyIncome()" classname="citadels.SampleTest" time="0.003"/>
-  <testcase name="testBuildInsufficientMoney()" classname="citadels.SampleTest" time="0.005"/>
-  <testcase name="testHandleNextResetsPhase()" classname="citadels.SampleTest" time="0.003"/>
-  <testcase name="testColour()" classname="citadels.SampleTest" time="0.003"/>
-  <testcase name="testMainInvalidThenValidInput()" classname="citadels.SampleTest" time="0.006"/>
-  <testcase name="testHelpCommand()" classname="citadels.SampleTest" time="0.002"/>
-  <testcase name="testBuildDistrictCards()" classname="citadels.SampleTest" time="0.001"/>
+  <testcase name="testCheckOverNoException()" classname="citadels.SampleTest" time="0.003"/>
+  <testcase name="testRunExit()" classname="citadels.SampleTest" time="0.002"/>
+  <testcase name="testPrintBuildDistrictsEmpty()" classname="citadels.SampleTest" time="0.003"/>
+  <testcase name="testBishopyIncome()" classname="citadels.SampleTest" time="0.001"/>
+  <testcase name="testBuildInsufficientMoney()" classname="citadels.SampleTest" time="0.002"/>
+  <testcase name="testHandleNextResetsPhase()" classname="citadels.SampleTest" time="0.002"/>
+  <testcase name="testColour()" classname="citadels.SampleTest" time="0.004"/>
+  <testcase name="testMainInvalidThenValidInput()" classname="citadels.SampleTest" time="0.003"/>
+  <testcase name="testHelpCommand()" classname="citadels.SampleTest" time="0.004"/>
+  <testcase name="testBuildDistrictCards()" classname="citadels.SampleTest" time="0.002"/>
   <testcase name="testLibraryDrawsTwo()" classname="citadels.SampleTest" time="0.002"/>
-  <testcase name="testRunTIntoTurnPhase()" classname="citadels.SampleTest" time="0.003"/>
-  <testcase name="testHandleNextSkipAssassinated()" classname="citadels.SampleTest" time="0.004"/>
-  <testcase name="testRunExits()" classname="citadels.SampleTest" time="0.004"/>
+  <testcase name="testRunTIntoTurnPhase()" classname="citadels.SampleTest" time="0.002"/>
+  <testcase name="testHandleNextSkipAssassinated()" classname="citadels.SampleTest" time="0.002"/>
+  <testcase name="testRunExits()" classname="citadels.SampleTest" time="0.003"/>
   <testcase name="testHandleNextInternal()" classname="citadels.SampleTest" time="0.003"/>
-  <testcase name="testDrawOrThrow()" classname="citadels.SampleTest" time="0.004"/>
-  <testcase name="testMuseum()" classname="citadels.SampleTest" time="0.005"/>
-  <testcase name="testNormal()" classname="citadels.SampleTest" time="0.004"/>
-  <testcase name="testParseCardsMissingResource()" classname="citadels.SampleTest" time="0.005"/>
-  <testcase name="testPurpleCardsEffects()" classname="citadels.SampleTest" time="0.005"/>
+  <testcase name="testDrawOrThrow()" classname="citadels.SampleTest" time="0.002"/>
+  <testcase name="testMuseum()" classname="citadels.SampleTest" time="0.002"/>
+  <testcase name="testNormal()" classname="citadels.SampleTest" time="0.002"/>
+  <testcase name="testParseCardsMissingResource()" classname="citadels.SampleTest" time="0.002"/>
+  <testcase name="testPurpleCardsEffects()" classname="citadels.SampleTest" time="0.002"/>
   <testcase name="testBellTowerYes()" classname="citadels.SampleTest" time="0.002"/>
-  <testcase name="testAllCommand()" classname="citadels.SampleTest" time="0.003"/>
-  <testcase name="testPlayer()" classname="citadels.SampleTest" time="0.002"/>
-  <testcase name="testQuarry()" classname="citadels.SampleTest" time="0.003"/>
-  <testcase name="testStealFromAssassinated()" classname="citadels.SampleTest" time="0.003"/>
-  <testcase name="testBuildWithFactoryDiscount()" classname="citadels.SampleTest" time="0.004"/>
-  <testcase name="testSelect()" classname="citadels.SampleTest" time="0.003"/>
-  <testcase name="testLoadNonexistentFile()" classname="citadels.SampleTest" time="0.003"/>
-  <testcase name="testDrawAndBottom()" classname="citadels.SampleTest" time="0.002"/>
-  <testcase name="testEndMethodNoException()" classname="citadels.SampleTest" time="0.002"/>
+  <testcase name="testAllCommand()" classname="citadels.SampleTest" time="0.001"/>
+  <testcase name="testPlayer()" classname="citadels.SampleTest" time="0.001"/>
+  <testcase name="testQuarry()" classname="citadels.SampleTest" time="0.002"/>
+  <testcase name="testStealFromAssassinated()" classname="citadels.SampleTest" time="0.002"/>
+  <testcase name="testBuildWithFactoryDiscount()" classname="citadels.SampleTest" time="0.003"/>
+  <testcase name="testSelect()" classname="citadels.SampleTest" time="0.006"/>
+  <testcase name="testLoadNonexistentFile()" classname="citadels.SampleTest" time="0.002"/>
+  <testcase name="testDrawAndBottom()" classname="citadels.SampleTest" time="0.003"/>
+  <testcase name="testEndMethodNoException()" classname="citadels.SampleTest" time="0.004"/>
   <testcase name="testRoleComparatorSortOrder()" classname="citadels.SampleTest" time="0.003"/>
-  <testcase name="testStealInvalidArguments()" classname="citadels.SampleTest" time="0.004"/>
-  <testcase name="testMerchantAbility()" classname="citadels.SampleTest" time="0.002"/>
+  <testcase name="testStealInvalidArguments()" classname="citadels.SampleTest" time="0.002"/>
+  <testcase name="testMerchantAbility()" classname="citadels.SampleTest" time="0.001"/>
   <testcase name="testBuildDuplicateWithoutQuarry()" classname="citadels.SampleTest" time="0.002"/>
   <testcase name="testThiefStealFailsNotThisRound()" classname="citadels.SampleTest" time="0.002"/>
   <testcase name="testDebugToggle()" classname="citadels.SampleTest" time="0.002"/>
-  <testcase name="testStealSuccess()" classname="citadels.SampleTest" time="0.002"/>
+  <testcase name="testStealSuccess()" classname="citadels.SampleTest" time="0.001"/>
   <system-out><![CDATA[Shuffling deck...
 Dealing cards...
 Welcome to Citadels
 A mystery character was removed.
-Bishop was removed.
+Magician was removed.
 Merchant was removed.
-Player 1, choose a charcter from: Architect, Assassin, Magician, Warlord, Thief
+Player 1, choose a charcter from: Bishop, King, Warlord, Architect, Assassin
 Shuffling deck...
 Dealing cards...
 Welcome to Citadels
 A mystery character was removed.
-Player 1, choose a charcter from: Warlord, King, Architect, Magician, Assassin, Thief, Bishop
+Player 1, choose a charcter from: Thief, Architect, Warlord, Assassin, Bishop, King, Magician
 Shuffling deck...
 Dealing cards...
 Welcome to Citadels
 A mystery character was removed.
-King was removed.
+Warlord was removed.
 Merchant was removed.
-Player 1, choose a charcter from: Warlord, Assassin, Thief, Magician, Bishop
+Player 1, choose a charcter from: Magician, Thief, Bishop, Architect, Assassin
 Draw: you drew two cards, choose one to keep:
-  1: School Of Magic
-  2: Dragon Gate
-Choose one to keep (1 or 2): Draw card: School Of Magic
+  1: Library
+  2: Palace
+Choose one to keep (1 or 2): Draw card: Library
 Shuffling deck...
 Dealing cards...
 Welcome to Citadels
 A mystery character was removed.
-Player 1, choose a charcter from: Thief, Architect, Assassin, Bishop, King, Warlord, Merchant
-Shuffling deck...
-Dealing cards...
-Welcome to Citadels
-A mystery character was removed.
-King was removed.
-Bishop was removed.
-Player 1, choose a charcter from: Architect, Merchant, Magician, Assassin, Warlord
+Player 1, choose a charcter from: Assassin, King, Bishop, Thief, Architect, Warlord, Merchant
 Shuffling deck...
 Dealing cards...
 Welcome to Citadels
 A mystery character was removed.
 Magician was removed.
-Assassin was removed.
-Player 1, choose a charcter from: Architect, Warlord, Bishop, King, Merchant
+Thief was removed.
+Player 1, choose a charcter from: Bishop, King, Assassin, Warlord, Architect
 Shuffling deck...
 Dealing cards...
 Welcome to Citadels
 A mystery character was removed.
-Player 1, choose a charcter from: Architect, Warlord, Merchant, Bishop, Magician, Thief, King
+Bishop was removed.
+Magician was removed.
+Player 1, choose a charcter from: King, Warlord, Merchant, Thief, Assassin
+Shuffling deck...
+Dealing cards...
+Welcome to Citadels
+A mystery character was removed.
+Player 1, choose a charcter from: Assassin, Merchant, King, Bishop, Thief, Warlord, Magician
 ]]></system-out>
   <system-err><![CDATA[]]></system-err>
 </testsuite>

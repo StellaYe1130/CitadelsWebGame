@@ -12,6 +12,14 @@
 
 提示：Render 免费实例长时间无人访问后会休眠，首次打开可能需要约一分钟唤醒。
 
+### 工程亮点
+
+- **接近生产环境的交付流程**：GitHub Actions 在每次 push 和 pull request 时自动运行测试并生成 JaCoCo 覆盖率报告。
+- **容器化部署**：项目包含多阶段 `Dockerfile` 和 `docker-compose.yml`，可以在本地以外的环境稳定构建和运行。
+- **线上 Demo**：使用 Render 以 Docker Web Service 的方式部署，并启用 HTTPS。
+- **房间级多人架构**：每个房间拥有独立的 `WebGameService`，支持多局游戏并发运行，而不是共享一个全局游戏状态。
+- **自动化测试覆盖**：核心游戏规则由大量 JUnit 测试覆盖，Web 层也补充了 Spring MVC 和房间管理测试。
+
 ### 功能亮点
 
 - **实时多人联机** - 基于 WebSocket（STOMP + SockJS），创建房间后分享 6 位房间码即可邀请好友
@@ -59,6 +67,8 @@ Spring Boot
 
 ### 测试
 
+CI 本地和线上使用同一条验证命令：
+
 ```bash
 # 运行全部测试
 gradle test
@@ -75,7 +85,31 @@ gradle test jacocoTestReport
 
 测试覆盖内容：游戏规则、全部 8 个角色技能、紫色特殊建筑效果、计分逻辑、存档/读档、角色选择、回合流程、AI 交互、Lobby 接口、房间创建/加入、游戏启动、广播逻辑及边界情况。
 
-### 快速开始
+### CI/CD
+
+GitHub Actions 配置位于 `.github/workflows/ci.yml`。
+
+每次 push 或 pull request 到 `main` / `master` 时，workflow 会：
+
+- 安装与项目运行环境一致的 Temurin Java 8
+- 安装 Gradle 8.2
+- 运行 `gradle test jacocoTestReport`
+- 上传 JUnit 测试报告和 JaCoCo HTML 覆盖率报告
+
+### 部署
+
+项目通过仓库中的 `Dockerfile` 部署到 Render。
+
+Render 部署流程：
+
+1. Render 拉取 GitHub 仓库代码。
+2. Docker 构建阶段运行 `gradle bootJar --no-daemon`。
+3. 运行阶段用 `java -jar citadels.jar` 启动 Spring Boot 应用。
+4. Render 通过 HTTPS 暴露线上地址：`https://citadelswebgame.onrender.com/`。
+
+当前使用 Render 免费实例，长时间无人访问后会休眠，首次打开可能需要约一分钟唤醒。
+
+### 本地开发
 
 **环境要求：** Java 8+、Gradle 8
 
@@ -92,7 +126,7 @@ java -jar build/libs/citadels.jar
 open http://localhost:8080
 ```
 
-**Docker：**
+### Docker
 
 ```bash
 # 使用 Docker 构建并运行

@@ -1,8 +1,6 @@
 # 🏰 Citadels — Real-time Multiplayer Board Game
 
 [![CI](https://github.com/StellaYe1130/CitadelsWebGame/actions/workflows/ci.yml/badge.svg)](https://github.com/StellaYe1130/CitadelsWebGame/actions/workflows/ci.yml)
-![Coverage](.github/badges/jacoco.svg)
-![Branches](.github/badges/branches.svg)
 
 [中文 README](README.zh-CN.md)
 
@@ -15,6 +13,14 @@ Players build medieval cities by selecting character roles, collecting gold, con
 Play online: **https://citadelswebgame.onrender.com/**
 
 Note: the free Render instance may take about one minute to wake up after inactivity.
+
+### Engineering Highlights
+
+- **Production-style delivery workflow**: GitHub Actions runs automated tests and JaCoCo coverage generation on every push and pull request.
+- **Dockerized deployment**: the application ships with a multi-stage `Dockerfile` and `docker-compose.yml`, so it can be built and run consistently outside the local development machine.
+- **Cloud-hosted demo**: deployed on Render as a Docker-backed web service with HTTPS enabled.
+- **Room-based multiplayer architecture**: each room owns an independent `WebGameService`, allowing concurrent games instead of sharing one global game state.
+- **Automated test coverage**: core game rules are covered by a large JUnit suite, with additional Spring MVC and room-manager tests for the web layer.
 
 ### Features
 
@@ -62,6 +68,8 @@ Spring Boot
 
 ### Testing
 
+CI runs the same verification command used locally:
+
 ```bash
 # Run all tests
 gradle test
@@ -78,7 +86,31 @@ gradle test jacocoTestReport
 
 Tests cover: game rules, all 8 character abilities, purple district effects, scoring, save/load, role selection, turn flow, AI interactions, lobby endpoints, room creation/joining, game startup, broadcasting, and edge cases.
 
-### Getting Started
+### CI/CD
+
+GitHub Actions is configured in `.github/workflows/ci.yml`.
+
+On every push or pull request to `main` / `master`, the workflow:
+
+- sets up Temurin Java 8 to match the project runtime
+- installs Gradle 8.2
+- runs `gradle test jacocoTestReport`
+- uploads the JUnit and JaCoCo HTML reports as workflow artifacts
+
+### Deployment
+
+The project is deployed to Render using the repository `Dockerfile`.
+
+Render deployment flow:
+
+1. Render pulls the GitHub repository.
+2. The Docker build stage runs `gradle bootJar --no-daemon`.
+3. The runtime image starts the Spring Boot app with `java -jar citadels.jar`.
+4. Render exposes the app over HTTPS at `https://citadelswebgame.onrender.com/`.
+
+The service uses Render's free instance type, so it may spin down after inactivity and take around one minute to wake up.
+
+### Local Development
 
 **Prerequisites:** Java 8+, Gradle 8
 
@@ -95,7 +127,7 @@ java -jar build/libs/citadels.jar
 open http://localhost:8080
 ```
 
-**Docker:**
+### Docker
 
 ```bash
 # Build and run with Docker

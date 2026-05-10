@@ -1,0 +1,102 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>Role.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">Scaffold Info1113assignment2</a> &gt; <a href="index.source.html" class="el_package">citadels</a> &gt; <span class="el_source">Role.java</span></div><h1>Role.java</h1><pre class="source lang-java linenums">package citadels;
+
+/**
+ * Enum representing the various roles a player can assume in the Citadels game.
+ * Each role has a turn order, name, and special ability.
+ */
+<span class="fc" id="L7">public enum Role {</span>
+    /**
+     * Assassin: Eliminates a character, causing that player to skip their turn.
+     */
+<span class="fc" id="L11">    Assassin(1, &quot;Assassin&quot;, &quot;Select another character whom you wish to kill. The killed character loses their turn.&quot;),</span>
+
+    /**
+     * Thief: Steals all gold from a character when they take their turn.
+     */
+<span class="fc" id="L16">    Thief(2, &quot;Thief&quot;, &quot;Select another character whom you wish to rob. When a player reveals that character to take his turn, you immediately take all of his gold. You cannot rob the Assassin or the killed character.&quot;),</span>
+
+    /**
+     * Magician: Swaps hand with another player or discards and redraws cards.
+     */
+<span class="fc" id="L21">    Magician(3, &quot;Magician&quot;, &quot;Can either exchange their hand with another player's, or discard any number of district cards face down to the bottom of the deck and draw an equal number of cards from the district deck (can only do this once per turn).&quot;),</span>
+
+    /**
+     * King: Gains bonus from yellow districts and crowns the next round.
+     */
+<span class="fc" id="L26">    King(4, &quot;King&quot;, &quot;Gains one gold for each yellow (noble) district in their city. They receive the crown token and will be the first to choose characters on the next round.&quot;),</span>
+
+    /**
+     * Bishop: Gains gold from blue districts and protection from the Warlord.
+     */
+<span class="fc" id="L31">    Bishop(5, &quot;Bishop&quot;, &quot;Gains one gold for each blue (religious) district in their city. Their buildings cannot be destroyed by the Warlord, unless they are killed by the Assassin.&quot;),</span>
+
+    /**
+     * Merchant: Gains gold from green districts and an extra gold.
+     */
+<span class="fc" id="L36">    Merchant(6, &quot;Mechant&quot;, &quot;Gains one gold for each green (trade) district in their city. Gains one extra gold.&quot;),</span>
+
+    /**
+     * Architect: Draws 2 extra cards and can build up to 3 districts in a turn.
+     */
+<span class="fc" id="L41">    Architect(7, &quot;Architect&quot;, &quot;Gains two extra district cards. Can build up to 3 districts per turn.&quot;),</span>
+
+    /**
+     * Warlord: Gains gold from red districts and can destroy buildings.
+     */
+<span class="fc" id="L46">    Warlord(8, &quot;Warlord&quot;, &quot;Gains one gold for each red (military) district in their city.&quot;);</span>
+
+    private final int order;
+    private final String theName;
+    private final String specialAbility;
+
+    /**
+     * Constructs a Role enum value with the specified order, name, and ability.
+     *
+     * @param order           the turn order of the role
+     * @param theName         the display name of the role
+     * @param specialAbility  the description of the role's power
+     */
+<span class="fc" id="L59">    Role(int order, String theName, String specialAbility){</span>
+<span class="fc" id="L60">        this.order = order;</span>
+<span class="fc" id="L61">        this.theName = theName;</span>
+<span class="fc" id="L62">        this.specialAbility = specialAbility;</span>
+<span class="fc" id="L63">    }</span>
+
+    /**
+     * Returns the order in which this role takes its turn.
+     *
+     * @return the role's order
+     */
+    public int getOrder(){
+<span class="fc" id="L71">        return order;</span>
+    }
+
+    /**
+     * Returns the display name of this role.
+     *
+     * @return the role's name
+     */
+    public String getTheName(){
+<span class="fc" id="L80">        return theName;</span>
+    }
+
+    /**
+     * Returns the special ability description for this role.
+     *
+     * @return the special ability text
+     */
+    public String getSpecialAbility(){
+<span class="fc" id="L89">        return specialAbility;</span>
+    }
+
+    /**
+     * Returns a string representation of the role, including name, order, and ability.
+     *
+     * @return the formatted role description
+     */
+    @Override
+    public String toString() {
+<span class="fc" id="L99">        return theName + &quot; (order &quot; + order + &quot;): &quot; + specialAbility;</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.9.202303310957</span></div></body></html>

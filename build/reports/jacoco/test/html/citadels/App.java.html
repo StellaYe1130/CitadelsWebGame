@@ -1,0 +1,1565 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>App.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">Scaffold Info1113assignment2</a> &gt; <a href="index.source.html" class="el_package">citadels</a> &gt; <span class="el_source">App.java</span></div><h1>App.java</h1><pre class="source lang-java linenums">package citadels;
+
+import java.net.URLDecoder;
+import java.nio.charset.StandardCharsets;
+
+import java.io.*;
+
+
+import java.util.*;
+
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import java.io.*;
+
+/**
+ * Main application class for running the Citadels game.
+ * Handles game setup, user input, command processing, and game phases.
+ */
+public class App {
+	/** File containing card definitions (cards.tsv). */
+    private File cardsFile;
+    /** Core game logic instance. */
+    private Game game;
+    /** Deck of cards used in the game. */
+    private Deck deck;
+
+
+    public void setDeck(Deck deck){
+<span class="fc" id="L29">        this.deck = deck;</span>
+<span class="fc" id="L30">    }</span>
+
+    /** Index of the next player to select a role. */
+<span class="fc" id="L33">    private int selectionPlayerIndex = 0;</span>
+
+    /** Roles available during the selection phase. */
+    private List&lt;Role&gt; selectionRoles;
+
+     /** Current phase of the game: character selection or turn phase. */
+<span class="fc" id="L39">    public enum Phase{</span>
+<span class="fc" id="L40">        character_selection,</span>
+<span class="fc" id="L41">        turn_phase</span>
+    }
+<span class="fc" id="L43">    public Phase phase = Phase.character_selection;</span>
+
+    /** Scanner for reading user input. */
+<span class="fc" id="L46">    private Scanner scanner = new Scanner(System.in);</span>
+
+    public void setScanner(Scanner scanner){
+<span class="fc" id="L49">        this.scanner = scanner;</span>
+<span class="fc" id="L50">    }</span>
+    
+    /** Index within turnOrder for the active turn. */
+<span class="fc" id="L53">    private int turnIndex = 0;</span>
+
+    /** Order of roles during the turn phase. */
+    private List&lt;Role&gt; turnOrder;
+
+    /** Mapping from Role to the Player who selected it. */
+    private Map&lt;Role, Player&gt; roleToPlayer;
+
+     /** Roles that have been assassinated this round. */
+<span class="fc" id="L62">    private Set&lt;Role&gt; assasssinatedRoles = new HashSet&lt;&gt;();</span>
+
+     /** The currently active role for processing commands. */
+    private Role activeRole;
+    public void setActiveRole(Role role) {
+<span class="fc" id="L67">        this.activeRole = role;</span>
+<span class="fc" id="L68">    }</span>
+
+    public List&lt;Player&gt; getPlayers() {
+<span class="fc" id="L71">        return game.getPlayers();</span>
+    }
+
+     /** Flag for printing debug information. */
+<span class="fc" id="L75">    public boolean debug = false;</span>
+
+    /** Gson instance for JSON (save/load) with pretty printing. */
+<span class="fc" id="L78">    private static final Gson GSON = new GsonBuilder().setPrettyPrinting().create();</span>
+
+     /** Roles that have hospital protection (assassinated but still act). */
+<span class="fc" id="L81">    private Set&lt;Role&gt; hospital = new HashSet&lt;&gt;();</span>
+
+    public Player getPlayerByRole(Role role) {
+<span class="fc" id="L84">        return roleToPlayer.get(role);</span>
+    }
+
+     /** Current role pointer used in various methods. */
+    private Role currentRole;
+    
+    public void setCurrentRole(Role role) {
+<span class="fc" id="L91">        this.currentRole = role;</span>
+<span class="fc" id="L92">    }</span>
+
+    public Player getCurrentPlayer() {
+<span class="fc" id="L95">        return game.getCurrentPlayer(); </span>
+    }
+
+    public String Colour(Card card, Player player){
+<span class="pc bpc" id="L99" title="1 of 4 branches missed.">        if(card.getName().equalsIgnoreCase(&quot;school of magic&quot;) &amp;&amp; player.getSchoolOfMagicColour() != null){</span>
+<span class="fc" id="L100">            return player.getSchoolOfMagicColour();</span>
+        }
+<span class="pc bpc" id="L102" title="1 of 4 branches missed.">        if(card.getName().equalsIgnoreCase(&quot;haunted city&quot;) &amp;&amp; player.getHauntedCity()!= null){</span>
+<span class="fc" id="L103">            return player.getHauntedCity();</span>
+        }
+<span class="fc" id="L105">        return card.getColour().toLowerCase();</span>
+    }
+
+    public void gameCopy(App app) {
+<span class="fc" id="L109">        Game copiedGame = app.getGame();</span>
+<span class="pc bpc" id="L110" title="1 of 4 branches missed.">        if (copiedGame == null || copiedGame.getPlayers() == null) {</span>
+<span class="fc" id="L111">         throw new IllegalStateException(&quot;Source app's game or players is null. Cannot copy.&quot;);</span>
+        }
+
+<span class="fc" id="L114">        this.game = new Game(copiedGame.getPlayers().size());</span>
+<span class="fc" id="L115">        this.game.gameCopy(copiedGame);    </span>
+<span class="fc" id="L116">        this.cardsFile = app.cardsFile;</span>
+<span class="fc" id="L117">        this.deck = app.deck;</span>
+<span class="fc" id="L118">        this.phase = app.phase;</span>
+
+<span class="fc" id="L120">        this.activeRole = app.activeRole;</span>
+<span class="fc" id="L121">        this.selectionPlayerIndex = app.selectionPlayerIndex;</span>
+
+<span class="pc bpc" id="L123" title="1 of 2 branches missed.">        this.turnOrder = app.turnOrder == null ? null : new ArrayList&lt;&gt;(app.turnOrder);</span>
+<span class="fc" id="L124">        this.turnIndex = app.turnIndex;</span>
+
+<span class="fc" id="L126">        this.debug = app.debug;</span>
+<span class="fc" id="L127">    }</span>
+
+     /** Indicates if Bell Tower's end condition is active. */
+<span class="fc" id="L130">    public boolean bellTower = false;</span>
+
+    /**
+     * Default constructor: starts a 4-player game using System.in.
+     */
+    public App() {
+<span class="fc" id="L136">        this(4);</span>
+<span class="fc" id="L137">    }</span>
+
+    /**
+     * Constructs a new App with specified number of players.
+     * Uses System.in for input.
+     * @param numberOfPlayers number of players (4-7)
+     */
+    public App(int numberOfPlayers) {
+<span class="fc" id="L145">        this(numberOfPlayers, System.in);</span>
+<span class="fc" id="L146">    }</span>
+
+    /**
+     * Constructs a new App with specified number of players and input stream.
+     * Initializes game, deck, deals cards, and starts role selection.
+     * @param numberOfPlayers number of players (4-7)
+     * @param in InputStream for user commands
+     */
+
+<span class="fc" id="L155">	public App(int numberOfPlayers, InputStream in) {</span>
+		try {
+<span class="fc" id="L157">            cardsFile = new File(URLDecoder.decode(this.getClass().getResource(&quot;cards.tsv&quot;).getPath(), StandardCharsets.UTF_8.name()));</span>
+<span class="nc" id="L158">        } catch (UnsupportedEncodingException e) {</span>
+<span class="nc" id="L159">            throw new RuntimeException(e);</span>
+<span class="fc" id="L160">        }</span>
+<span class="fc" id="L161">        System.out.println(&quot;Shuffling deck...&quot;);</span>
+<span class="fc" id="L162">        this.game = new Game(numberOfPlayers);</span>
+<span class="fc" id="L163">        this.scanner = new Scanner(in);</span>
+<span class="fc" id="L164">        this.deck = parseCards();</span>
+<span class="fc" id="L165">        this.deck.shuffle();</span>
+<span class="fc" id="L166">        this.roleToPlayer = new LinkedHashMap&lt;&gt;();</span>
+<span class="fc" id="L167">        System.out.println(&quot;Dealing cards...&quot;);</span>
+
+<span class="fc bfc" id="L169" title="All 2 branches covered.">        for(Player player : game.getPlayers()){</span>
+<span class="fc bfc" id="L170" title="All 2 branches covered.">            for(int i = 0; i &lt; 4; i++){</span>
+<span class="fc" id="L171">                Card card = this.deck.drawOrThrow();</span>
+<span class="fc" id="L172">                player.drawCard(card);</span>
+
+            }
+<span class="fc" id="L175">        }</span>
+<span class="fc" id="L176">        System.out.println(&quot;Welcome to Citadels&quot;);</span>
+<span class="fc" id="L177">        startSelectionPhase();</span>
+        
+<span class="fc" id="L179">	}</span>
+
+    public Game getGame(){
+<span class="fc" id="L182">        return this.game;</span>
+    }
+
+    public void setGame(Game g) {
+<span class="fc" id="L186">        this.game = g;</span>
+<span class="fc" id="L187">    }</span>
+
+    public List&lt;Role&gt; getSelectionRoles(){
+<span class="fc" id="L190">        return new ArrayList&lt;&gt;(selectionRoles);</span>
+    }
+
+
+    /**
+     * Reads cards.tsv resource, parses each line, and constructs a Deck.
+     * @return Deck populated with cards from cards.tsv
+     */
+    public Deck parseCards(){
+<span class="fc" id="L199">        Deck deck = new Deck();</span>
+<span class="fc" id="L200">        InputStream in = getClass().getResourceAsStream(&quot;/citadels/cards.tsv&quot;);</span>
+
+<span class="fc" id="L202">        try(Scanner scanner = new Scanner(in, StandardCharsets.UTF_8.name())){</span>
+            //skip the head of cards.tsv
+<span class="pc bpc" id="L204" title="1 of 2 branches missed.">            if(scanner.hasNextLine()){</span>
+<span class="fc" id="L205">               scanner.nextLine();</span>
+            }
+<span class="fc bfc" id="L207" title="All 2 branches covered.">            while(scanner.hasNextLine()){</span>
+<span class="fc" id="L208">                String line = scanner.nextLine();</span>
+<span class="fc" id="L209">                String[] parts = line.split(&quot;\t&quot;);</span>
+<span class="fc" id="L210">                String Name = parts[0];</span>
+<span class="fc" id="L211">                String colour = parts[2];</span>
+<span class="fc" id="L212">                int cost = Integer.parseInt(parts[3]);</span>
+<span class="fc" id="L213">                String description = &quot;&quot;;</span>
+<span class="fc bfc" id="L214" title="All 2 branches covered.">                if(parts.length &gt;= 5){</span>
+<span class="fc" id="L215">                    description = parts[4];</span>
+                }
+<span class="fc" id="L217">                deck.addCard(new Card(Name, cost, colour, description));</span>
+<span class="fc" id="L218">            }</span>
+<span class="nc" id="L219">        }catch(Exception e){</span>
+<span class="nc" id="L220">            throw new RuntimeException(&quot;Error parsing cards.tsv: &quot; + e.getMessage());</span>
+<span class="fc" id="L221">        }</span>
+<span class="fc" id="L222">        return deck;</span>
+    }
+
+    /**
+     * Main game loop: reads user input, processes commands, and advances phases.
+     */
+    public void run(){
+        
+        while(true){
+<span class="fc" id="L231">            System.out.print(&quot;&gt; &quot;);</span>
+            String line;
+            try{
+<span class="fc" id="L234">                line = scanner.nextLine().trim();</span>
+<span class="fc" id="L235">            }catch(NoSuchElementException e){</span>
+<span class="fc" id="L236">                break;</span>
+<span class="fc" id="L237">            }</span>
+<span class="fc bfc" id="L238" title="All 2 branches covered.">            if(line.equalsIgnoreCase(&quot;exit&quot;)){</span>
+<span class="fc" id="L239">                System.out.println(&quot;Player Exit&quot;);</span>
+<span class="fc" id="L240">                break;</span>
+            }
+<span class="fc bfc" id="L242" title="All 2 branches covered.">            if(line.equalsIgnoreCase(&quot;t&quot;)){</span>
+<span class="fc" id="L243">                handleNext();</span>
+<span class="fc" id="L244">                continue;</span>
+            }
+
+<span class="fc bfc" id="L247" title="All 2 branches covered.">            if(phase == Phase.character_selection){</span>
+<span class="fc bfc" id="L248" title="All 6 branches covered.">                if(line.equalsIgnoreCase(&quot;handcards&quot;) || line.equalsIgnoreCase(&quot;money&quot;) || line.equalsIgnoreCase(&quot;help&quot;)){</span>
+<span class="fc" id="L249">                   System.out.println(processCommand(line));</span>
+<span class="fc" id="L250">                   continue;</span>
+               }
+<span class="fc" id="L252">                Role chosenRole = null;</span>
+<span class="fc bfc" id="L253" title="All 2 branches covered.">                for(Role role: selectionRoles){</span>
+<span class="fc bfc" id="L254" title="All 2 branches covered.">                    if(role.name().equalsIgnoreCase(line)){</span>
+<span class="fc" id="L255">                        chosenRole = role;</span>
+<span class="fc" id="L256">                        break;</span>
+                    }
+<span class="fc" id="L258">                }</span>
+<span class="fc bfc" id="L259" title="All 2 branches covered.">                if(chosenRole != null){</span>
+<span class="fc" id="L260">                   String res = processCommand(&quot;select &quot; + line);</span>
+<span class="fc" id="L261">                   System.out.println(res);</span>
+<span class="fc bfc" id="L262" title="All 2 branches covered.">                   if(selectionPlayerIndex &lt; game.getPlayers().size()){</span>
+<span class="fc" id="L263">                        Player next = game.getPlayers().get(selectionPlayerIndex);</span>
+<span class="fc" id="L264">                        printSelectionPrompt(next);</span>
+                   }
+<span class="fc" id="L266">                }else{</span>
+<span class="fc" id="L267">                    System.out.println(&quot;All players have chosen. Starting turn phase.&quot;);</span>
+<span class="fc" id="L268">                    phase = Phase.turn_phase;</span>
+<span class="fc" id="L269">                    initTurnOrder();</span>
+                }
+<span class="fc" id="L271">                continue;</span>
+            }
+<span class="fc" id="L273">            System.out.println(processCommand(line));</span>
+<span class="fc" id="L274">        }</span>
+<span class="fc" id="L275">    }</span>
+
+
+    /** Initializes the role selection phase, shuffles roles, and prints first prompt. */
+    public void startSelectionPhase(){
+<span class="fc" id="L280">        phase = Phase.character_selection;</span>
+<span class="fc" id="L281">        assasssinatedRoles.clear();</span>
+<span class="fc" id="L282">        roleToPlayer.clear();</span>
+<span class="fc" id="L283">        hospital.clear();</span>
+<span class="fc" id="L284">        selectionRoles = new ArrayList&lt;&gt;();</span>
+<span class="fc bfc" id="L285" title="All 2 branches covered.">        for(Role role: Role.values()){</span>
+<span class="fc" id="L286">            selectionRoles.add(role);</span>
+        }
+<span class="fc" id="L288">        Collections.shuffle(selectionRoles);</span>
+<span class="fc" id="L289">        Role hidden = selectionRoles.remove(0);</span>
+<span class="fc" id="L290">        System.out.println(&quot;A mystery character was removed.&quot;);</span>
+
+<span class="fc" id="L292">        int numberPlayers = game.getPlayers().size();</span>
+        int faceUpCount;
+<span class="fc bfc" id="L294" title="All 2 branches covered.">        if(numberPlayers == 4){</span>
+<span class="fc" id="L295">            faceUpCount = 2;</span>
+<span class="fc bfc" id="L296" title="All 2 branches covered.">        }else if(numberPlayers == 5){</span>
+<span class="fc" id="L297">            faceUpCount = 1;</span>
+        }else{
+<span class="fc" id="L299">            faceUpCount = 0;</span>
+        }
+<span class="fc bfc" id="L301" title="All 2 branches covered.">        for(int i = 0 ; i &lt; faceUpCount; i++){</span>
+<span class="fc" id="L302">            Role faceUp = selectionRoles.remove(0);</span>
+<span class="fc" id="L303">            System.out.println(faceUp.name() + &quot; was removed.&quot;);</span>
+        }
+
+<span class="fc" id="L306">        Player first = game.getPlayers().get(selectionPlayerIndex);</span>
+<span class="fc" id="L307">        printSelectionPrompt(first);</span>
+<span class="fc" id="L308">    }</span>
+
+    /** Prints prompt showing which roles are available to a player. */
+    public void printSelectionPrompt(Player p){
+<span class="fc" id="L312">        List&lt;String&gt; names = new ArrayList&lt;&gt;();</span>
+<span class="fc bfc" id="L313" title="All 2 branches covered.">        for(Role role: selectionRoles){</span>
+<span class="fc" id="L314">            names.add(role.name());</span>
+<span class="fc" id="L315">        }</span>
+<span class="fc" id="L316">        String options = String.join(&quot;, &quot;, names);</span>
+<span class="fc" id="L317">        System.out.println(&quot;Player &quot; + p.getId() + &quot;, choose a charcter from: &quot; + options);</span>
+<span class="fc" id="L318">    }</span>
+
+    /** Initializes turn order based on chosen roles and their order property. */
+    public void initTurnOrder(){
+<span class="fc" id="L322">        turnOrder = new ArrayList&lt;Role&gt;();</span>
+<span class="fc bfc" id="L323" title="All 2 branches covered.">        for(Role role: roleToPlayer.keySet()){</span>
+<span class="fc" id="L324">            turnOrder.add(role);</span>
+<span class="fc" id="L325">        }</span>
+<span class="fc" id="L326">        Collections.sort(turnOrder, new Comparator&lt;Role&gt;() {</span>
+            @Override
+            public int compare(Role role1, Role role2){
+<span class="fc" id="L329">                return role1.getOrder() - role2.getOrder();</span>
+            }
+        });
+<span class="fc" id="L332">        turnIndex = 0;</span>
+<span class="fc" id="L333">    }</span>
+
+    /**
+     * Advances the game state to the next player or phase.
+     * If in character selection phase: Prompts the next player to choose a role. Once all players have chosen, initializes turn order and switches to turn phase.
+     * If in turn phase: When all roles have acted, announces the crowned player and resets to character selection. Handles assassination:If a role is assassinated but protected by Hospital, allows the player to act with restrictions.Otherwise, skips and logs the assassination.
+     * Sets the current player based on the next role in turn order.Resets that player’s one-time purple card flags (laboratory, smithy, armory).&lt;/li&gt;
+     * Calls {@link #processTurn()} to perform the turn actions and {@link #end(Player)} for end-of-turn effects.
+     * @see #startSelectionPhase()
+     * @see #processTurn()
+     * @see #end(Player)
+     */
+    public void handleNext(){
+<span class="fc bfc" id="L346" title="All 2 branches covered.">        if(phase == Phase.character_selection){</span>
+<span class="fc bfc" id="L347" title="All 2 branches covered.">            if(selectionPlayerIndex &lt; game.getPlayers().size()){</span>
+<span class="fc" id="L348">                Player next = game.getPlayers().get(selectionPlayerIndex);</span>
+<span class="fc" id="L349">                printSelectionPrompt(next);</span>
+<span class="fc" id="L350">            }else{</span>
+<span class="fc" id="L351">                initTurnOrder();</span>
+<span class="fc" id="L352">                phase = Phase.turn_phase;</span>
+<span class="fc" id="L353">                turnIndex = 0;</span>
+<span class="fc" id="L354">                handleNext();</span>
+            }
+<span class="fc" id="L356">            return;</span>
+        }
+
+<span class="fc bfc" id="L359" title="All 2 branches covered.">        if (turnIndex &gt;= turnOrder.size()) {</span>
+<span class="fc" id="L360">            Player first = game.getKingPlayer();</span>
+<span class="pc bpc" id="L361" title="1 of 2 branches missed.">            if (first != null) {</span>
+<span class="fc" id="L362">                System.out.println(first.getId() + &quot; is the crowned player and goes first.&quot;);</span>
+<span class="fc" id="L363">                selectionPlayerIndex = game.getPlayers().indexOf(first);</span>
+            } else {
+<span class="nc" id="L365">                selectionPlayerIndex = 0;</span>
+            }
+<span class="fc" id="L367">            phase = Phase.character_selection;</span>
+<span class="fc" id="L368">            startSelectionPhase();</span>
+<span class="fc" id="L369">            return;</span>
+        }
+        
+<span class="fc" id="L372">        Role next = turnOrder.get(turnIndex);</span>
+<span class="fc" id="L373">        Player nextPlayer = roleToPlayer.get(next);</span>
+        
+<span class="fc" id="L375">        boolean hasHospital = false;</span>
+<span class="fc bfc" id="L376" title="All 2 branches covered.">        for(Card build: nextPlayer.getBuildDistricCards()){</span>
+<span class="pc bpc" id="L377" title="1 of 2 branches missed.">            if(&quot;hospital&quot;.equalsIgnoreCase(build.getName())){</span>
+<span class="fc" id="L378">                hasHospital = true;</span>
+<span class="fc" id="L379">                break;</span>
+            }
+<span class="nc" id="L381">        }</span>
+<span class="pc bpc" id="L382" title="2 of 6 branches missed.">        if(assasssinatedRoles.contains(next) &amp;&amp; hasHospital &amp;&amp; !hospital.contains(next)){</span>
+<span class="fc" id="L383">            System.out.println(&quot;Hospital: you are assassinated, you may take an action during your turn (but you may not build a district card or use your character's power)&quot;);</span>
+<span class="fc" id="L384">            hospital.add(next);</span>
+        }else{
+<span class="fc bfc" id="L386" title="All 4 branches covered.">            while(turnIndex &lt; turnOrder.size() &amp;&amp; assasssinatedRoles.contains(turnOrder.get(turnIndex))){</span>
+<span class="fc" id="L387">                    Role dead = turnOrder.get(turnIndex);</span>
+<span class="fc" id="L388">                    System.out.println();</span>
+<span class="fc" id="L389">                    System.out.println(&quot;==========================&quot;);</span>
+<span class="fc" id="L390">                    System.out.println(dead.name() + &quot; was assassinated. SKIP.&quot;);</span>
+<span class="fc" id="L391">                    turnIndex++;</span>
+<span class="fc" id="L392">            }</span>
+        }
+
+<span class="fc bfc" id="L395" title="All 2 branches covered.">        if(turnIndex &gt;= turnOrder.size()){</span>
+<span class="fc" id="L396">            Player first = game.getKingPlayer();</span>
+<span class="pc bpc" id="L397" title="1 of 2 branches missed.">            if (first != null) {</span>
+<span class="fc" id="L398">                System.out.println(first.getId() + &quot; is the crowned player and goes first.&quot;);</span>
+            }
+<span class="pc bpc" id="L400" title="1 of 2 branches missed.">            if(first != null){</span>
+<span class="fc" id="L401">                selectionPlayerIndex = game.getPlayers().indexOf(first);</span>
+            }else{
+<span class="nc" id="L403">                selectionPlayerIndex = 0;</span>
+            }
+<span class="fc" id="L405">            phase = Phase.character_selection;</span>
+<span class="fc" id="L406">            startSelectionPhase();</span>
+            
+<span class="fc" id="L408">           return;</span>
+        }
+        
+<span class="fc" id="L411">        Role currentRole = turnOrder.get(turnIndex);</span>
+            
+<span class="fc" id="L413">        Player currentPlayer = roleToPlayer.get(currentRole);</span>
+<span class="fc" id="L414">        int index = game.getPlayers().indexOf(currentPlayer);</span>
+<span class="fc" id="L415">        game.setCurrentIndex(index);</span>
+<span class="fc" id="L416">        currentPlayer.laboratory = false;</span>
+<span class="fc" id="L417">        currentPlayer.smithy = false;</span>
+<span class="fc" id="L418">        currentPlayer.armory = false;</span>
+<span class="nc" id="L419">        processTurn();</span>
+<span class="nc" id="L420">        end(currentPlayer);</span>
+<span class="nc" id="L421">        turnIndex++;</span>
+        
+<span class="nc" id="L423">    }</span>
+
+    /**
+     * Executes a full turn for the active role, covering:
+     * Reset to selection phase if turnIndex exceeds role list
+     * Assignment of activeRole and updating current player index
+     * King and Bishop district-based income bonuses
+     * Prompting for 'action income' or 'action draw', including library effects
+     * Architect ability: draw two extra cards
+     * Magician ability: handle 'swap' and 'redraw' subcommands with validation
+     * Building phase: enforce build limits and process 'build' commands
+     * Merchant and Warlord end-of-turn bonuses for green and red districts
+     * Advance to next role or reset selection phase at round end
+     * @see #processCommand(String)
+     * @see #handleNext()
+     */
+    
+    public void processTurn(){
+<span class="pc bpc" id="L441" title="1 of 2 branches missed.">        if(turnIndex &gt;= turnOrder.size()){</span>
+<span class="nc" id="L442">            phase = Phase.character_selection;</span>
+<span class="nc" id="L443">            startSelectionPhase();</span>
+<span class="nc" id="L444">            return;</span>
+        }
+        
+<span class="fc" id="L447">        Role currentRole = turnOrder.get(turnIndex);</span>
+<span class="fc" id="L448">        this.activeRole = currentRole;</span>
+        
+<span class="fc" id="L450">        turnIndex = turnIndex + 1;</span>
+<span class="fc" id="L451">        Player currentPlayer = roleToPlayer.get(currentRole);</span>
+<span class="fc" id="L452">        int index = game.getPlayers().indexOf(currentPlayer);</span>
+<span class="fc" id="L453">        game.setCurrentIndex(index);</span>
+
+<span class="fc bfc" id="L455" title="All 2 branches covered.">        if(currentRole == Role.King){</span>
+<span class="fc" id="L456">            int count = 0;</span>
+<span class="fc bfc" id="L457" title="All 2 branches covered.">            for(Card card: currentPlayer.getBuildDistricCards()){</span>
+<span class="fc" id="L458">                String colour = Colour(card, currentPlayer);</span>
+<span class="pc bpc" id="L459" title="1 of 2 branches missed.">                if(colour.equals(&quot;yellow&quot;)){</span>
+<span class="fc" id="L460">                    count++;</span>
+                }
+<span class="fc" id="L462">            }</span>
+<span class="fc" id="L463">            currentPlayer.addMoney(count);</span>
+<span class="fc" id="L464">            System.out.println(&quot;King bonus: +&quot; + count + &quot; gold.&quot;);</span>
+
+<span class="fc" id="L466">            game.setKing(currentPlayer);</span>
+<span class="fc" id="L467">            System.out.println(&quot;Player &quot; + currentPlayer.getId() + &quot; is the king.&quot;);</span>
+
+<span class="fc bfc" id="L469" title="All 2 branches covered.">            for(Player player: game.getPlayers()){</span>
+<span class="fc bfc" id="L470" title="All 2 branches covered.">                for(Card built : player.getBuildDistricCards()){</span>
+<span class="pc bpc" id="L471" title="1 of 2 branches missed.">                    if(&quot;throne room&quot;.equalsIgnoreCase(built.getName())){</span>
+<span class="nc" id="L472">                        player.addMoney(1);</span>
+<span class="nc" id="L473">                        System.out.println(&quot;Throne Room: Player &quot; + player.getId() + &quot; gains 1 gold as Crown switched.&quot;);</span>
+<span class="nc" id="L474">                        break;</span>
+                    }
+<span class="fc" id="L476">                }</span>
+<span class="fc" id="L477">            }</span>
+        }
+
+<span class="fc bfc" id="L480" title="All 2 branches covered.">        if(currentRole == Role.Bishop){</span>
+<span class="fc" id="L481">            int count = 0;</span>
+<span class="fc bfc" id="L482" title="All 2 branches covered.">            for(Card card: currentPlayer.getBuildDistricCards()){</span>
+<span class="pc bpc" id="L483" title="1 of 2 branches missed.">                if(Colour(card, currentPlayer).equalsIgnoreCase(&quot;blue&quot;)){</span>
+<span class="fc" id="L484">                    count++;</span>
+                }
+<span class="fc" id="L486">            }</span>
+<span class="fc" id="L487">            currentPlayer.addMoney(count);</span>
+<span class="fc" id="L488">            System.out.println(&quot;Bishop bonus: +&quot; + count + &quot; gold for building blue district.&quot;);</span>
+        }
+        
+<span class="fc" id="L491">        System.out.println();</span>
+<span class="fc" id="L492">        System.out.println(&quot;===&quot; + currentRole.getTheName() + &quot;'s turn ===&quot;);</span>
+<span class="fc" id="L493">        System.out.println(&quot;Player &quot; + currentPlayer.getId() + &quot;'s turn&quot;);</span>
+<span class="fc" id="L494">        System.out.println(&quot;Please enter 'action income' or 'action draw': &quot;);</span>
+
+        while(true){
+<span class="fc" id="L497">            System.out.print(&quot;&gt; &quot;);</span>
+<span class="fc" id="L498">            String choice = scanner.nextLine().trim().toLowerCase();</span>
+<span class="pc bpc" id="L499" title="1 of 2 branches missed.">            if(choice.equals(&quot;exit&quot;)){</span>
+<span class="nc" id="L500">                System.out.println(&quot;Player Exit&quot;);</span>
+<span class="nc" id="L501">                System.exit(0);</span>
+            }
+<span class="pc bpc" id="L503" title="1 of 4 branches missed.">            if(choice.equals(&quot;action income&quot;) || choice.equals(&quot;action draw&quot;)){</span>
+<span class="fc" id="L504">                System.out.println(processCommand(choice));</span>
+<span class="fc" id="L505">                break;</span>
+<span class="nc bnc" id="L506" title="All 4 branches missed.">            }else if(choice.equals(&quot;handcards&quot;) || choice.equals(&quot;money&quot;)){</span>
+<span class="nc" id="L507">                System.out.println(processCommand(choice));</span>
+<span class="nc" id="L508">                continue;</span>
+            }else{
+<span class="nc" id="L510">                System.out.println(&quot;Invaild input, please enter 'action income' or 'action draw&quot;);</span>
+            }
+<span class="nc" id="L512">        }</span>
+<span class="fc bfc" id="L513" title="All 2 branches covered.">        if(currentRole == Role.Architect){</span>
+<span class="fc" id="L514">            System.out.println(&quot;Architect ability: drawing 2 cards...&quot;);</span>
+<span class="fc bfc" id="L515" title="All 2 branches covered.">            for(int i = 0; i &lt; 2; i++){</span>
+<span class="fc" id="L516">                Card extra = deck.drawOrThrow();</span>
+<span class="fc" id="L517">                currentPlayer.drawCard(extra);</span>
+<span class="fc" id="L518">                System.out.println(&quot; Draw: &quot; + extra.getName());</span>
+            }
+        }
+        
+<span class="fc bfc" id="L522" title="All 2 branches covered.">        if(currentRole == Role.Magician){</span>
+<span class="fc" id="L523">            System.out.println(&quot;Magician ability: 'action swap &lt;playerID&gt;' action redraw &lt;i1,i2,...&gt;' or 'skip'&quot;);</span>
+            while(true){
+<span class="fc" id="L525">                System.out.print(&quot;&gt; &quot;);</span>
+<span class="fc" id="L526">                String line = scanner.nextLine().trim();</span>
+<span class="pc bpc" id="L527" title="1 of 2 branches missed.">                 if(line.equalsIgnoreCase(&quot;skip&quot;)){</span>
+<span class="nc" id="L528">                    break;</span>
+                }
+<span class="fc" id="L530">                String[] args = line.split(&quot;\\s+&quot;, 3);</span>
+
+<span class="pc bpc" id="L532" title="3 of 4 branches missed.">                if(args.length &lt; 3 || !args[0].equalsIgnoreCase(&quot;action&quot;)){</span>
+<span class="fc" id="L533">                    System.out.println(&quot;Invalid input.&quot;);</span>
+<span class="fc" id="L534">                    continue;</span>
+                }
+                
+<span class="nc" id="L537">                String subcommand = args[1];</span>
+<span class="nc" id="L538">                String target = args[2];</span>
+<span class="nc" id="L539">                Player magician = game.getCurrentPlayer();</span>
+               
+<span class="nc bnc" id="L541" title="All 2 branches missed.">                if(subcommand.equalsIgnoreCase(&quot;swap&quot;)){</span>
+                    try{
+<span class="nc" id="L543">                        int targetId = Integer.parseInt(target);</span>
+<span class="nc" id="L544">                        Player other = game.getOtherPlayer(targetId);</span>
+<span class="nc bnc" id="L545" title="All 2 branches missed.">                        if(other == null){</span>
+<span class="nc" id="L546">                            System.out.println(&quot;No such player: &quot; + args[1]);</span>
+                        }else{
+<span class="nc" id="L548">                            List&lt;Card&gt; magicianCards = new ArrayList&lt;&gt;(magician.getHandCards());</span>
+<span class="nc" id="L549">                            List&lt;Card&gt; otherCards = new ArrayList&lt;&gt;(other.getHandCards());</span>
+<span class="nc" id="L550">                            magician.setHandCards(otherCards);</span>
+<span class="nc" id="L551">                            other.setHandCards(magicianCards);</span>
+<span class="nc" id="L552">                            System.out.println(&quot;Swap hand cards with Player &quot; + targetId);</span>
+<span class="nc" id="L553">                            break;</span>
+                        }
+<span class="nc" id="L555">                    }catch(NumberFormatException e){</span>
+<span class="nc" id="L556">                        System.out.println(&quot;INvalid player id: &quot; + target);</span>
+<span class="nc" id="L557">                    }</span>
+<span class="nc bnc" id="L558" title="All 2 branches missed.">                }else if(subcommand.equalsIgnoreCase(&quot;redraw&quot;)){</span>
+<span class="nc" id="L559">                    String[] position = target.split(&quot;,&quot;);</span>
+<span class="nc" id="L560">                    List&lt;Card&gt; magicianHandCards = magician.getHandCards();</span>
+<span class="nc" id="L561">                    List&lt;Integer&gt; redraw = new ArrayList&lt;&gt;();</span>
+<span class="nc" id="L562">                    boolean error = false;</span>
+<span class="nc bnc" id="L563" title="All 2 branches missed.">                    for(String s: position){</span>
+                        try{
+<span class="nc" id="L565">                            int i = Integer.parseInt(s.trim()) - 1;</span>
+<span class="nc bnc" id="L566" title="All 4 branches missed.">                            if(i &lt; 0 || i &gt;= magicianHandCards.size()){</span>
+<span class="nc" id="L567">                                System.out.println(&quot;Invalid index: &quot; + s);</span>
+<span class="nc" id="L568">                                error = true;</span>
+<span class="nc" id="L569">                                break;</span>
+                            }
+<span class="nc" id="L571">                            redraw.add(i);</span>
+<span class="nc" id="L572">                        }catch(NumberFormatException e){</span>
+<span class="nc" id="L573">                            System.out.println(&quot;Invalid number: &quot; + s);</span>
+<span class="nc" id="L574">                            error = true;</span>
+<span class="nc" id="L575">                            break;</span>
+<span class="nc" id="L576">                        }</span>
+                    }
+<span class="nc bnc" id="L578" title="All 4 branches missed.">                    if(!error &amp;&amp; !redraw.isEmpty()){</span>
+<span class="nc" id="L579">                        Collections.sort(redraw, Collections.reverseOrder());</span>
+<span class="nc" id="L580">                        List&lt;Card&gt; oldCards = new ArrayList&lt;&gt;();</span>
+<span class="nc bnc" id="L581" title="All 2 branches missed.">                        for(int idx: redraw){</span>
+<span class="nc" id="L582">                            oldCards.add(magicianHandCards.get(idx));</span>
+<span class="nc" id="L583">                        }</span>
+
+<span class="nc bnc" id="L585" title="All 2 branches missed.">                       for(Card old: oldCards){</span>
+<span class="nc" id="L586">                        deck.addBottom(old);</span>
+<span class="nc" id="L587">                       }</span>
+
+<span class="nc" id="L589">                       List&lt;Card&gt; newcCards = new ArrayList&lt;&gt;();</span>
+<span class="nc bnc" id="L590" title="All 2 branches missed.">                       for(int i = 0; i &lt; redraw.size(); i++){</span>
+<span class="nc" id="L591">                        newcCards.add(deck.drawOrThrow());</span>
+                       }
+
+<span class="nc bnc" id="L594" title="All 2 branches missed.">                       for(int j = 0; j &lt; redraw.size(); j++){</span>
+<span class="nc" id="L595">                            int idx = redraw.get(j);</span>
+<span class="nc" id="L596">                            magicianHandCards.remove(idx);</span>
+<span class="nc" id="L597">                            Card newCard = newcCards.get(j);</span>
+<span class="nc" id="L598">                            magicianHandCards.add(idx, newCard);</span>
+<span class="nc" id="L599">                            System.out.println(&quot;Draw: &quot; + newCard.getName());</span>
+                       }
+<span class="nc" id="L601">                        System.out.println(&quot;Redraw: &quot; + redraw.size() + &quot; cards.&quot;);</span>
+<span class="nc" id="L602">                        break;</span>
+                    }
+<span class="nc" id="L604">                }else{</span>
+<span class="nc" id="L605">                    System.out.println(&quot;Invalid action&quot;);</span>
+                }
+<span class="nc" id="L607">            }</span>
+        }
+
+<span class="fc" id="L610">        System.out.println(&quot;Please enter: &quot;);</span>
+<span class="fc" id="L611">        System.out.println(&quot;build &lt;n&gt;&quot;);</span>
+<span class="fc" id="L612">        System.out.println(&quot;action &lt;special&gt;&quot;);</span>
+<span class="fc" id="L613">        System.out.println(&quot;end&quot;);</span>
+
+<span class="fc" id="L615">        int buildCount = 0;</span>
+        int maxBuilds;
+<span class="fc bfc" id="L617" title="All 2 branches covered.">        if(currentRole == Role.Architect){</span>
+<span class="fc" id="L618">            maxBuilds = 3;</span>
+        }else{
+<span class="fc" id="L620">            maxBuilds = 1;</span>
+        }
+        
+        
+        while(true){
+<span class="fc" id="L625">            System.out.print(&quot;&gt; &quot;);</span>
+<span class="fc" id="L626">            String command = scanner.nextLine().trim();</span>
+<span class="pc bpc" id="L627" title="1 of 2 branches missed.">            if(command.equalsIgnoreCase(&quot;exit&quot;)){</span>
+<span class="nc" id="L628">                System.out.println(&quot;Player Exit&quot;);</span>
+<span class="nc" id="L629">                System.exit(0);</span>
+            }
+<span class="pc bpc" id="L631" title="1 of 2 branches missed.">            if(command.equalsIgnoreCase(&quot;end&quot;)){</span>
+<span class="fc" id="L632">                System.out.println(&quot;The turn ends&quot;);</span>
+<span class="fc" id="L633">                break;</span>
+            }
+<span class="nc" id="L635">            String[] parts = command.split(&quot;\\s+&quot;);</span>
+<span class="nc bnc" id="L636" title="All 2 branches missed.">            if(parts[0].equalsIgnoreCase(&quot;build&quot;)){</span>
+<span class="nc bnc" id="L637" title="All 2 branches missed.">                if(buildCount &gt;= maxBuilds){</span>
+<span class="nc" id="L638">                    System.out.println(&quot;You have used all your build this turn.&quot;);</span>
+<span class="nc" id="L639">                    continue;</span>
+                }
+<span class="nc" id="L641">                String result = processCommand(command);</span>
+<span class="nc" id="L642">                System.out.println(result);</span>
+<span class="nc bnc" id="L643" title="All 2 branches missed.">                if(result.startsWith(&quot;Built: &quot;)){</span>
+<span class="nc" id="L644">                    buildCount++;</span>
+                }
+                continue;
+            }
+<span class="nc" id="L648">            System.out.println(processCommand(command));</span>
+<span class="nc" id="L649">        }</span>
+<span class="fc bfc" id="L650" title="All 2 branches covered.">        if(currentRole == Role.Merchant){</span>
+<span class="fc" id="L651">            int count = 0;</span>
+<span class="fc bfc" id="L652" title="All 2 branches covered.">            for(Card card: currentPlayer.getBuildDistricCards()){</span>
+<span class="pc bpc" id="L653" title="1 of 2 branches missed.">                if(Colour(card, currentPlayer).equalsIgnoreCase(&quot;green&quot;)){</span>
+<span class="fc" id="L654">                    count++;</span>
+                }
+<span class="fc" id="L656">            }</span>
+<span class="fc" id="L657">            currentPlayer.addMoney(count + 1);</span>
+<span class="fc" id="L658">            System.out.println(&quot;Mechant bonus: &quot; + count + &quot; (green districts)&quot;);</span>
+        }
+<span class="fc bfc" id="L660" title="All 2 branches covered.">        if(currentRole == Role.Warlord){</span>
+<span class="fc" id="L661">            int count = 0;</span>
+<span class="fc bfc" id="L662" title="All 2 branches covered.">            for(Card card: currentPlayer.getBuildDistricCards()){</span>
+<span class="pc bpc" id="L663" title="1 of 2 branches missed.">                if(Colour(card, currentPlayer).equalsIgnoreCase(&quot;red&quot;)){</span>
+<span class="fc" id="L664">                    count++;</span>
+                }
+<span class="fc" id="L666">            }currentPlayer.addMoney(count);</span>
+<span class="fc" id="L667">             System.out.println(&quot;Warlord bonus: +&quot; + count + &quot; gold.&quot;);</span>
+        }
+<span class="fc" id="L669">        handleNext();</span>
+<span class="fc" id="L670">    }</span>
+
+    /**
+     * Parses and executes a player command, handling all supported cases:
+     * handcards / hand: lists the current player’s hand cards
+     * money / gold: displays the current player’s gold amount
+     * build: attempts to build the nth card in hand, enforcing
+     *       duplicate, quarry, and factory rules
+     * info: shows details for a built district or purple card
+     * role: lists roles still available for selection
+     * select: allows the player to pick a role during the selection phase
+     * action income / action draw: grants gold or draws cards, with library special rules if owned
+     * destroy / assassinate / steal: executes Warlord, Assassin, and Thief actions
+     * special kill|steal: internal handling of special role interactions
+     * help: prints the list of all commands
+     * all: displays a summary of each player’s state
+     * city / list / citadels: lists built districts for the given player
+     * debug: toggles debug mode (reveals other players’ hands)
+     * save load : persists or restores game state to/from JSON
+     * use: activates the ability of a built purple district
+     * @param line the raw input command
+     * @return a message indicating the result or an error description
+     */
+
+    public String processCommand(String line){
+<span class="pc bpc" id="L695" title="1 of 4 branches missed.">        if (line != null &amp;&amp; line.trim().equalsIgnoreCase(&quot;t&quot;)) {</span>
+<span class="fc" id="L696">            return &quot;Please enter 'action income' or 'action draw': &quot;;</span>
+        }
+<span class="fc" id="L698">        String[] parts = line.split(&quot;\\s+&quot;);</span>
+<span class="fc" id="L699">        String command = parts[0].toLowerCase();</span>
+<span class="fc bfc" id="L700" title="All 16 branches covered.">        switch(command){</span>
+            case &quot;handcards&quot;:
+            case &quot;hand&quot;:{
+<span class="fc" id="L703">                List&lt;Card&gt; handCards = game.getCurrentPlayer().getHandCards();</span>
+<span class="fc" id="L704">                StringBuilder sb = new StringBuilder();</span>
+<span class="fc" id="L705">                sb.append(&quot;Handcards: &quot;);</span>
+                
+<span class="fc bfc" id="L707" title="All 2 branches covered.">                for (int i = 0; i &lt; handCards.size(); i++) {</span>
+<span class="fc bfc" id="L708" title="All 2 branches covered.">                    if (i &gt; 0) sb.append(&quot;, &quot;);</span>
+<span class="fc" id="L709">                        sb.append(handCards.get(i).getName());</span>
+                }
+<span class="fc" id="L711">                return sb.toString();</span>
+            }
+
+            case &quot;money&quot;:
+            case &quot;gold&quot;: {
+<span class="fc" id="L716">                int money = game.getCurrentPlayer().getMoney();</span>
+<span class="fc" id="L717">                StringBuilder sb = new StringBuilder();</span>
+<span class="fc" id="L718">                sb.append(&quot;Money: &quot;);</span>
+<span class="fc" id="L719">                sb.append(money);</span>
+<span class="fc" id="L720">                return sb.toString();</span>
+            }    
+
+            case &quot;build&quot;:
+<span class="fc" id="L724">                Role currentRole = activeRole;</span>
+                try{
+<span class="fc" id="L726">                    int cardIndex = Integer.parseInt(parts[1]) - 1;</span>
+<span class="fc" id="L727">                    Player player = game.getCurrentPlayer();</span>
+<span class="fc" id="L728">                    List&lt;Card&gt; hand = player.getHandCards();</span>
+<span class="pc bpc" id="L729" title="1 of 4 branches missed.">                    if(cardIndex &lt; 0 || cardIndex &gt;= hand.size()){</span>
+<span class="fc" id="L730">                        return &quot;Invalid handIndex: &quot; + parts[1];</span>
+                    }
+<span class="fc" id="L732">                    Card c = hand.get(cardIndex);</span>
+<span class="fc" id="L733">                    List&lt;Card&gt; builtList = player.getBuildDistricCards();</span>
+                    
+<span class="fc" id="L735">                    int exist = 0;</span>
+<span class="fc bfc" id="L736" title="All 2 branches covered.">                    for(Card buildCard: builtList){</span>
+<span class="fc bfc" id="L737" title="All 2 branches covered.">                        if(buildCard.getName().equals(c.getName())){</span>
+<span class="fc" id="L738">                            exist++;</span>
+                        }
+<span class="fc" id="L740">                    }</span>
+<span class="fc bfc" id="L741" title="All 2 branches covered.">                    if(exist &gt; 0){</span>
+<span class="fc" id="L742">                        boolean quarry = false;</span>
+<span class="fc bfc" id="L743" title="All 2 branches covered.">                        for(Card built : builtList){</span>
+<span class="fc bfc" id="L744" title="All 2 branches covered.">                            if(&quot;quarry&quot;.equalsIgnoreCase(built.getName())){</span>
+<span class="fc" id="L745">                                quarry = true;</span>
+<span class="fc" id="L746">                                break;</span>
+                            }
+<span class="fc" id="L748">                        }</span>
+<span class="fc bfc" id="L749" title="All 2 branches covered.">                        if(!quarry){</span>
+<span class="fc" id="L750">                            return &quot;Cannot build duplicate district: &quot; + c.getName();</span>
+                        }
+
+<span class="pc bpc" id="L753" title="1 of 2 branches missed.">                        if(exist &gt;= 2){</span>
+<span class="nc" id="L754">                            return &quot;Cannot build more than one duplicate of: &quot; + c.getName();</span>
+                        }
+<span class="fc" id="L756">                        System.out.println(&quot;Quarry: you may only have one such duplicate district in your city at any one time&quot;);</span>
+                    }
+<span class="fc" id="L758">                    int original = c.getCost();</span>
+<span class="fc" id="L759">                    int effective = original;</span>
+<span class="fc bfc" id="L760" title="All 4 branches covered.">                    if(!c.getName().equalsIgnoreCase(&quot;factory&quot;) &amp;&amp; c.getColour().equalsIgnoreCase(&quot;purple&quot;)){</span>
+<span class="fc" id="L761">                        boolean factory = false;</span>
+<span class="fc bfc" id="L762" title="All 2 branches covered.">                        for(Card built : player.getBuildDistricCards()){</span>
+<span class="fc bfc" id="L763" title="All 2 branches covered.">                            if(&quot;factory&quot;.equalsIgnoreCase(built.getName())){</span>
+<span class="fc" id="L764">                                factory = true;</span>
+<span class="fc" id="L765">                                break;</span>
+                            }
+<span class="fc" id="L767">                        }</span>
+<span class="fc bfc" id="L768" title="All 2 branches covered.">                        if(factory){</span>
+<span class="fc" id="L769">                            effective = Math.max(0, original - 1);</span>
+<span class="fc" id="L770">                            System.out.println(&quot;\&quot;Factory works: &quot; + original + &quot; turns to &quot; + effective);</span>
+                        }
+                    }
+                    
+<span class="fc bfc" id="L774" title="All 2 branches covered.">                    if(!player.spendMoney(c.getCost())){</span>
+<span class="fc" id="L775">                        return &quot;Insufficient money to build the district: &quot; + c.getName();</span>
+                    }
+<span class="fc" id="L777">                    player.buildDistricCards(c);</span>
+                    
+<span class="fc bfc" id="L779" title="All 2 branches covered.">                    if(c.getColour().equalsIgnoreCase(&quot;purple&quot;)){</span>
+<span class="fc" id="L780">                        purpleCardsOne(player, c);</span>
+                    }
+<span class="fc" id="L782">                    checkOver();</span>
+<span class="fc" id="L783">                    return &quot;Built: &quot; + c.getName();</span>
+        
+<span class="fc" id="L785">                }catch(NumberFormatException e){</span>
+<span class="fc" id="L786">                    return &quot;Invalid number: &quot; + parts[1];</span>
+                }
+
+            case &quot;info&quot;:
+<span class="fc bfc" id="L790" title="All 2 branches covered.">                if(parts.length &lt; 2){</span>
+<span class="fc" id="L791">                    return &quot;Invalid built position: &quot;;</span>
+                }
+<span class="fc" id="L793">                Player gamer = game.getCurrentPlayer();</span>
+<span class="fc" id="L794">                String arg = parts[1];</span>
+
+                try{
+<span class="fc" id="L797">                    int cardPosition = Integer.parseInt(parts[1]) - 1;</span>
+<span class="fc" id="L798">                    Player player = game.getCurrentPlayer();</span>
+<span class="fc" id="L799">                    List&lt;Card&gt; built = player.getBuildDistricCards();</span>
+<span class="pc bpc" id="L800" title="2 of 4 branches missed.">                    if(cardPosition &lt; 0 || cardPosition &gt;= built.size()){</span>
+<span class="fc" id="L801">                        return &quot;Invalid built position: &quot; + parts[1];</span>
+                    }
+<span class="nc" id="L803">                    Card c = built.get(cardPosition);</span>
+<span class="nc" id="L804">                    return String.format(</span>
+                    &quot;Card[%d]: %s (cost = %d, colour = %s) - %s&quot;,
+<span class="nc" id="L806">                    cardPosition + 1, c.getName(), c.getCost(), c.getColour(), c.getDescription());</span>
+<span class="fc" id="L807">                }catch(NumberFormatException e){</span>
+<span class="fc bfc" id="L808" title="All 2 branches covered.">                    for(Card c : gamer.getHandCards()){</span>
+<span class="fc bfc" id="L809" title="All 4 branches covered.">                        if(c.getName().equalsIgnoreCase(arg) &amp;&amp; c.getColour().equalsIgnoreCase(&quot;purple&quot;)){</span>
+<span class="fc" id="L810">                            return String.format(&quot;%s [ purple%d ] - %s&quot;, c.getName(),c.getCost(),c.getDescription());</span>
+                        }
+<span class="fc" id="L812">                    }</span>
+<span class="fc" id="L813">                    return &quot;Invalid built position: &quot; + parts[1];</span>
+                }
+
+            case &quot;role&quot;:
+<span class="fc" id="L817">                List&lt;Role&gt; available = game.getAvailableRoles();</span>
+<span class="fc" id="L818">                StringBuilder names = new StringBuilder();</span>
+<span class="fc bfc" id="L819" title="All 2 branches covered.">                for(int i = 0; i &lt; available.size(); i++){</span>
+<span class="fc bfc" id="L820" title="All 2 branches covered.">                    if(i &gt; 0){</span>
+<span class="fc" id="L821">                        names.append(&quot;, &quot;);</span>
+                    }
+<span class="fc" id="L823">                    names.append(available.get(i).name());</span>
+                }
+<span class="fc" id="L825">                return &quot;Available roles: &quot; + names.toString();</span>
+                
+
+            case &quot;select&quot;:
+<span class="fc" id="L829">                String choice = parts[1];</span>
+<span class="fc" id="L830">                Role chosenRole = null;</span>
+<span class="fc bfc" id="L831" title="All 2 branches covered.">                for(Role role: Role.values()){</span>
+<span class="fc bfc" id="L832" title="All 2 branches covered.">                    if(role.name().equalsIgnoreCase(choice)){</span>
+<span class="fc" id="L833">                        chosenRole = role;</span>
+<span class="fc" id="L834">                        break;</span>
+                    }
+                }
+<span class="fc bfc" id="L837" title="All 2 branches covered.">                if(chosenRole == null){</span>
+<span class="fc" id="L838">                    return &quot;Unknown role: &quot; + choice;</span>
+                }
+
+<span class="fc bfc" id="L841" title="All 2 branches covered.">                if(! selectionRoles.contains(chosenRole)){</span>
+<span class="fc" id="L842">                    return &quot;The role has already been chosen &quot; + chosenRole.name();</span>
+                }
+<span class="fc" id="L844">                Player p = game.getPlayers().get(selectionPlayerIndex);</span>
+<span class="fc" id="L845">                roleToPlayer.put(chosenRole, p);</span>
+<span class="fc" id="L846">                selectionRoles.remove(chosenRole);</span>
+
+<span class="fc" id="L848">                String result = &quot;Chosen &quot; + choice;</span>
+<span class="fc" id="L849">                selectionPlayerIndex++;</span>
+<span class="fc bfc" id="L850" title="All 2 branches covered.">                if(selectionPlayerIndex &lt; game.getPlayers().size()){</span>
+<span class="fc" id="L851">                    Player next = game.getPlayers().get(selectionPlayerIndex);</span>
+<span class="fc" id="L852">                    result += &quot; . Next player: &quot; + next.getId();</span>
+                        
+                }
+<span class="fc" id="L855">                return result;</span>
+                
+            case &quot;action&quot;:
+                
+<span class="fc" id="L859">                String action = parts[1].toLowerCase();</span>
+<span class="fc" id="L860">                Player current = game.getCurrentPlayer();</span>
+<span class="fc bfc" id="L861" title="All 6 branches covered.">                switch (action) {</span>
+                    case &quot;income&quot;:
+<span class="fc" id="L863">                        current.addMoney(2);</span>
+<span class="fc" id="L864">                        return &quot;Income: add 2 gold&quot;;</span>
+
+                    case &quot;draw&quot;:
+<span class="fc" id="L867">                        Player currentPlayer = game.getCurrentPlayer();</span>
+<span class="fc" id="L868">                        boolean library = false;</span>
+<span class="fc bfc" id="L869" title="All 2 branches covered.">                        for(Card built: current.getBuildDistricCards()){</span>
+<span class="fc bfc" id="L870" title="All 2 branches covered.">                            if(&quot;library&quot;.equalsIgnoreCase(built.getName())){</span>
+<span class="fc" id="L871">                                library = true;</span>
+<span class="fc" id="L872">                                break;</span>
+                            }
+<span class="fc" id="L874">                        }</span>
+
+<span class="fc bfc" id="L876" title="All 2 branches covered.">                        if(library){</span>
+<span class="fc" id="L877">                            System.out.println(&quot;:obrary: If you choose to draw cards you you take an action, you keep both of the cards you have drawn.&quot;);</span>
+<span class="fc" id="L878">                            Card one = deck.drawOrThrow();</span>
+<span class="fc" id="L879">                            Card two = deck.drawOrThrow();</span>
+<span class="fc" id="L880">                            current.drawCard(one);</span>
+<span class="fc" id="L881">                            current.drawCard(two);</span>
+<span class="fc" id="L882">                            System.out.println(&quot;Drawn: 1/ &quot; + one.getName() + &quot;, Drawn: 2/ &quot; + two.getName());</span>
+<span class="fc" id="L883">                            return &quot;Library: you can keep both cards&quot;;</span>
+                        }else{
+<span class="fc" id="L885">                            List&lt;Card&gt; choose = new ArrayList&lt;&gt;();</span>
+<span class="fc" id="L886">                            Card first  = deck.drawOrThrow();</span>
+<span class="fc" id="L887">                            Card second = deck.drawOrThrow();</span>
+<span class="fc" id="L888">                            choose.add(first);</span>
+<span class="fc" id="L889">                            choose.add(second);</span>
+
+<span class="fc" id="L891">                            System.out.println(&quot;Draw: you drew two cards, choose one to keep:&quot;);</span>
+<span class="fc" id="L892">                            System.out.println(&quot;  1: &quot; + first.getName());</span>
+<span class="fc" id="L893">                            System.out.println(&quot;  2: &quot; + second.getName());</span>
+<span class="fc" id="L894">                            System.out.print(&quot;Choose one to keep (1 or 2): &quot;);</span>
+
+<span class="fc" id="L896">                            int option = 1;</span>
+                            try {
+<span class="fc" id="L898">                                option = Integer.parseInt(scanner.nextLine().trim());</span>
+<span class="fc" id="L899">                            } catch (Exception e) {</span>
+
+<span class="fc" id="L901">                            }</span>
+<span class="pc bpc" id="L902" title="1 of 2 branches missed.">                            if (option != 2) {</span>
+<span class="fc" id="L903">                                option = 1;</span>
+                            }
+
+<span class="fc" id="L906">                            Card keep = choose.get(option - 1);</span>
+<span class="fc" id="L907">                            Card drop = choose.get(2 - option);</span>
+<span class="fc" id="L908">                            current.drawCard(keep);</span>
+<span class="fc" id="L909">                            deck.addBottom(drop);</span>
+
+<span class="fc" id="L911">                            System.out.println(&quot;Draw card: &quot; + keep.getName());</span>
+<span class="fc" id="L912">                            return &quot;Draw card: &quot; + keep.getName();</span>
+                        }
+                        
+                    case &quot;steal&quot;:
+<span class="fc" id="L916">                        return processCommand(&quot;special steal &quot; + parts[2]);</span>
+
+                    case &quot;assassinate&quot;:
+<span class="fc" id="L919">                        return processCommand(&quot;special kill &quot; + parts[2]);</span>
+                        
+                    case &quot;destroy&quot;:
+<span class="fc bfc" id="L922" title="All 2 branches covered.">                        if(activeRole != Role.Warlord){</span>
+<span class="fc" id="L923">                            return &quot;Only Warlord can destroy district&quot;;</span>
+                        }
+<span class="pc bpc" id="L925" title="1 of 2 branches missed.">                        if(parts.length != 4){</span>
+<span class="nc" id="L926">                            return &quot;You should enter destroy &lt;player's ID&gt; &lt;district Index&gt;.&quot;;</span>
+                        }
+
+                        try{
+<span class="fc" id="L930">                            int targetId = Integer.parseInt(parts[2]);</span>
+<span class="fc" id="L931">                            int destroyIndex = Integer.parseInt(parts[3]) - 1;</span>
+
+<span class="fc" id="L933">                            Player target = game.getOtherPlayer(targetId);</span>
+<span class="fc" id="L934">                            Player warlord = game.getCurrentPlayer();</span>
+
+<span class="fc" id="L936">                            List&lt;Card&gt; districts = target.getBuildDistricCards();</span>
+                        
+<span class="fc" id="L938">                            Card toDestroy = districts.get(destroyIndex);</span>
+                        
+<span class="pc bpc" id="L940" title="1 of 2 branches missed.">                            if(toDestroy.getName().equalsIgnoreCase(&quot;keep&quot;)){</span>
+<span class="nc" id="L941">                                return &quot;The Keep cannot be destroyed by the Warlord&quot;;</span>
+                            }
+
+<span class="fc" id="L944">                            int cost = toDestroy.getCost() - 1;</span>
+
+<span class="fc" id="L946">                            boolean greatWall = false;</span>
+<span class="fc bfc" id="L947" title="All 2 branches covered.">                            for(Card built : target.getBuildDistricCards()){</span>
+<span class="pc bpc" id="L948" title="1 of 2 branches missed.">                                if(built.getName().equalsIgnoreCase(&quot;great wall&quot;)){</span>
+<span class="nc" id="L949">                                    greatWall = true;</span>
+<span class="nc" id="L950">                                    break;</span>
+                                }
+<span class="fc" id="L952">                            }</span>
+<span class="pc bpc" id="L953" title="1 of 2 branches missed.">                            if(greatWall){</span>
+<span class="nc" id="L954">                                cost += 1;</span>
+<span class="nc" id="L955">                                System.out.println(&quot;The cost for the Warlord to destory any of your other districts is increased by one gold. Now is turned to &quot; + cost + &quot;gold&quot; );</span>
+                            }
+
+<span class="pc bpc" id="L958" title="1 of 2 branches missed.">                            if(warlord.getMoney() &lt; cost){</span>
+<span class="nc" id="L959">                                return &quot;Insufficient money to destroy the target&quot;;</span>
+                            }
+<span class="fc" id="L961">                            warlord.spendMoney(cost);</span>
+<span class="fc" id="L962">                            districts.remove(destroyIndex);</span>
+                                
+<span class="pc bpc" id="L964" title="1 of 2 branches missed.">                            for(Card built : target.getBuildDistricCards()){</span>
+<span class="nc bnc" id="L965" title="All 2 branches missed.">                                if(built.getName().equalsIgnoreCase(&quot;graveyard&quot;)){</span>
+<span class="nc" id="L966">                                    System.out.println(&quot;Player &quot; + target.getId() +&quot;, Graveyard lets you pay 1 gold to take&quot; + toDestroy.getName() + &quot; into your hand (yes or no)? &quot;);</span>
+<span class="nc" id="L967">                                    String answer = scanner.nextLine().trim().toLowerCase();</span>
+<span class="nc bnc" id="L968" title="All 4 branches missed.">                                    if(&quot;yes&quot;.equals(answer) &amp;&amp; target.getMoney() &gt;= 1){</span>
+<span class="nc" id="L969">                                        target.spendMoney(1);</span>
+<span class="nc" id="L970">                                        target.drawCard(toDestroy);</span>
+<span class="nc" id="L971">                                        System.out.println(&quot;Graveyard: you paid 1 gold and took &quot; + toDestroy.getName() + &quot; into your hand.&quot;);</span>
+                                    }else{
+<span class="nc" id="L973">                                        System.out.println(&quot;Fail&quot;);</span>
+                                    }
+<span class="nc" id="L975">                                    break;</span>
+                                }
+<span class="nc" id="L977">                            }</span>
+
+<span class="pc bpc" id="L979" title="1 of 2 branches missed.">                            if(&quot;bell tower&quot;.equalsIgnoreCase(toDestroy.getName())){</span>
+<span class="nc" id="L980">                                bellTower = false;</span>
+<span class="nc" id="L981">                                System.out.println(&quot;Bell Tower was destroyed, the ability won't be activated&quot;);</span>
+                            }
+
+<span class="fc" id="L984">                            return &quot;Destroyed &quot; + toDestroy.getName() + &quot; from Player &quot; + targetId + &quot; 's district (cost&quot; + cost + &quot; money)&quot;;</span>
+
+<span class="nc" id="L986">                        }catch(NumberFormatException e){</span>
+<span class="nc" id="L987">                            return &quot;Invalid &quot;;</span>
+                        }
+            
+                        default:
+<span class="fc" id="L991">                            return &quot;Unknown action: &quot; + action;</span>
+                    }
+
+                case &quot;help&quot;:
+<span class="fc" id="L995">                    StringBuilder sb = new StringBuilder();</span>
+<span class="fc" id="L996">                    sb.append(&quot;Available commands:\n&quot;);</span>
+<span class="fc" id="L997">                    sb.append(&quot;  info : show information about a character or building\n&quot;);</span>
+<span class="fc" id="L998">                    sb.append(&quot;  t : processes turns\n&quot;);</span>
+<span class="fc" id="L999">                    sb.append(&quot;  all : shows all current game info\n&quot;);</span>
+<span class="fc" id="L1000">                    sb.append(&quot;  citadel/list/city : shows districts built by a player\n&quot;);</span>
+<span class="fc" id="L1001">                    sb.append(&quot;  hand : show all cards in hand\n&quot;);</span>
+<span class="fc" id="L1002">                    sb.append(&quot;  gold [p] : shows gold of a player\n&quot;);</span>
+<span class="fc" id="L1003">                    sb.append(&quot;  build &lt;place in hand&gt; : Builds a building into your city\n&quot;);</span>
+<span class="fc" id="L1004">                    sb.append(&quot;  action : Gives info about your special action and how to perform it\n&quot;);</span>
+<span class="fc" id="L1005">                    sb.append(&quot;  end : Ends your turn\n&quot;);</span>
+<span class="fc" id="L1006">                    return sb.toString();</span>
+
+                case &quot;special&quot;:
+                    
+<span class="fc" id="L1010">                    String Action = parts[1].toLowerCase();</span>
+<span class="fc" id="L1011">                    String target = parts[2];</span>
+<span class="fc" id="L1012">                    Role targetRole = null;</span>
+<span class="fc bfc" id="L1013" title="All 2 branches covered.">                    for(Role role: Role.values()){</span>
+<span class="fc bfc" id="L1014" title="All 2 branches covered.">                        if(role.name().equalsIgnoreCase(target)){</span>
+<span class="fc" id="L1015">                            targetRole = role;</span>
+<span class="fc" id="L1016">                            break;</span>
+                        }
+                    }
+<span class="fc bfc" id="L1019" title="All 2 branches covered.">                    if(targetRole == null){</span>
+<span class="fc" id="L1020">                        return &quot;Unknown role: &quot; + target;</span>
+                    }
+<span class="fc bfc" id="L1022" title="All 2 branches covered.">                    if(Action.equals(&quot;kill&quot;)){</span>
+<span class="fc" id="L1023">                        assasssinatedRoles.add(targetRole);</span>
+<span class="fc" id="L1024">                        return targetRole.name() + &quot; has been assassinated.&quot;;</span>
+<span class="pc bpc" id="L1025" title="1 of 2 branches missed.">                    }else if(Action.equals(&quot;steal&quot;)){</span>
+<span class="fc" id="L1026">                        Player thief = game.getCurrentPlayer();</span>
+<span class="fc" id="L1027">                        Player victim = roleToPlayer.get(targetRole);</span>
+<span class="pc bpc" id="L1028" title="2 of 4 branches missed.">                        if(targetRole == Role.Assassin || assasssinatedRoles.contains(targetRole)){</span>
+<span class="nc" id="L1029">                            return &quot;You cannot steal from &quot; + targetRole.name();</span>
+                        }
+<span class="pc bpc" id="L1031" title="1 of 2 branches missed.">                        if(victim == null){</span>
+<span class="fc" id="L1032">                            return targetRole.name() + &quot; is not this round.&quot;;</span>
+                        }
+<span class="nc" id="L1034">                        int amount = Math.min(2, victim.getMoney());</span>
+<span class="nc" id="L1035">                        victim.spendMoney(amount);</span>
+<span class="nc" id="L1036">                        thief.addMoney(amount);</span>
+<span class="nc" id="L1037">                        return &quot;Stole &quot; + amount + &quot; money from &quot; + targetRole.name() + &quot; .&quot;;</span>
+                    }else{
+<span class="nc" id="L1039">                        return &quot;Unknow special action: &quot; + Action;</span>
+                    }
+
+                case &quot;all&quot;:{
+<span class="pc bpc" id="L1043" title="1 of 2 branches missed.">                    for (Player player : game.getPlayers()) {</span>
+<span class="fc" id="L1044">                        StringBuilder SB = new StringBuilder();</span>
+<span class="fc" id="L1045">                        SB.append(&quot;Player &quot;).append(player.getId());</span>
+<span class="pc bpc" id="L1046" title="1 of 2 branches missed.">                        if(player == game.getCurrentPlayer()){</span>
+<span class="fc" id="L1047">                            SB.append( &quot; (you) &quot;);</span>
+                        }
+<span class="fc" id="L1049">                        SB.append(&quot;: &quot;);</span>
+                    
+<span class="fc" id="L1051">                        int hand = player.getHandCardsCopy().size();</span>
+<span class="fc" id="L1052">                        SB.append(&quot;cards=&quot;).append(hand).append(&quot; &quot;);</span>
+<span class="fc" id="L1053">                        int gold = player.getMoney();</span>
+<span class="fc" id="L1054">                        SB.append(&quot;gold=&quot;).append(gold).append(&quot; &quot;);</span>
+<span class="fc" id="L1055">                        List&lt;Card&gt; build = player.getBuildDistricCards();</span>
+<span class="fc" id="L1056">                        List&lt;String&gt; name = new ArrayList&lt;&gt;();</span>
+<span class="fc bfc" id="L1057" title="All 2 branches covered.">                        for(Card card: build){</span>
+<span class="fc" id="L1058">                            name.add(card.getName());</span>
+<span class="fc" id="L1059">                        }</span>
+<span class="fc" id="L1060">                        SB.append(&quot;build=&quot;).append(String.join(&quot;,&quot;, name)).append(&quot; &quot;);</span>
+                        
+<span class="fc bfc" id="L1062" title="All 2 branches covered.">                        for(Card card: build){</span>
+<span class="fc" id="L1063">                            SB.append(&quot;[ &quot;);</span>
+<span class="fc" id="L1064">                            SB.append(card.getColour().toLowerCase());</span>
+<span class="fc" id="L1065">                            SB.append(card.getCost());</span>
+<span class="fc" id="L1066">                            SB.append(&quot; ]&quot;);</span>
+<span class="fc" id="L1067">                        }</span>
+<span class="pc bpc" id="L1068" title="1 of 4 branches missed.">                        if(debug &amp;&amp; player != game.getCurrentPlayer()){</span>
+<span class="nc" id="L1069">                            List&lt;Card&gt; hide = player.getHandCardsCopy();</span>
+<span class="nc" id="L1070">                            StringBuilder hideSB = new StringBuilder();</span>
+<span class="nc" id="L1071">                            hideSB.append(&quot;[DEBUG] handcards: &quot;);</span>
+<span class="nc bnc" id="L1072" title="All 2 branches missed.">                            if(hide.isEmpty()){</span>
+<span class="nc bnc" id="L1073" title="All 2 branches missed.">                                for(int j = 0; j &lt; hide.size();j++){</span>
+<span class="nc bnc" id="L1074" title="All 2 branches missed.">                                    if(j &gt; 0){</span>
+<span class="nc" id="L1075">                                        hideSB.append(&quot;, &quot;);</span>
+                                    }
+<span class="nc" id="L1077">                                    hideSB.append(hide.get(j).getName());</span>
+                                }
+<span class="nc" id="L1079">                                System.out.println(hideSB.toString());</span>
+                            }
+                        }
+<span class="fc" id="L1082">                        System.out.println(SB.toString());</span>
+<span class="fc" id="L1083">                        return SB.toString();</span>
+                    }
+<span class="nc" id="L1085">                    break;</span>
+                }
+
+                case &quot;city&quot;:
+                case &quot;list&quot;:
+                case &quot;citadels&quot;:{
+<span class="fc bfc" id="L1091" title="All 2 branches covered.">                    if(parts.length &lt; 2){</span>
+<span class="fc" id="L1092">                        return &quot;Invaild arguments&quot;;</span>
+                    }
+                    int playerID;
+                    try{
+<span class="fc" id="L1096">                        playerID = Integer.parseInt(parts[1]);</span>
+<span class="fc" id="L1097">                    }catch(NumberFormatException e){</span>
+<span class="fc" id="L1098">                        return &quot;Invalid player ID&quot;;</span>
+<span class="fc" id="L1099">                    }</span>
+
+<span class="fc" id="L1101">                    Player otherPlayer = game.getOtherPlayer(playerID);</span>
+<span class="fc" id="L1102">                    List&lt;Card&gt; district = otherPlayer.getBuildDistricCards();</span>
+<span class="fc bfc" id="L1103" title="All 2 branches covered.">                    if(district.isEmpty()){</span>
+<span class="fc" id="L1104">                        return &quot;Player &quot; + playerID + &quot; has no built districts&quot;;</span>
+                    }
+<span class="fc" id="L1106">                    List&lt;String&gt; name = new ArrayList&lt;&gt;();</span>
+<span class="fc bfc" id="L1107" title="All 2 branches covered.">                    for (Card c : district) {</span>
+<span class="fc" id="L1108">                        name.add(c.getName());</span>
+<span class="fc" id="L1109">                    }</span>
+<span class="fc" id="L1110">                    return &quot;Player &quot; + playerID + &quot; has built: &quot; + String.join(&quot;,&quot;, name);</span>
+                }
+
+                case &quot;debug&quot;:{
+<span class="fc bfc" id="L1114" title="All 2 branches covered.">                    debug = !debug;</span>
+<span class="fc bfc" id="L1115" title="All 2 branches covered.">                    if(debug){</span>
+<span class="fc" id="L1116">                        return &quot;Debug mode ON - other players'hands will be shown&quot;;</span>
+                    }else{
+<span class="fc" id="L1118">                        return &quot;Debug mode OFF.&quot;;</span>
+                    }
+                }
+
+                case &quot;save&quot;:{
+<span class="fc bfc" id="L1123" title="All 2 branches covered.">                    if(parts.length &lt; 2){</span>
+<span class="fc" id="L1124">                        return &quot;Invalid input&quot;;</span>
+                    }
+<span class="fc" id="L1126">                    String filename = parts[1];</span>
+<span class="fc" id="L1127">                    try(FileWriter writer = new FileWriter(filename)){</span>
+<span class="fc" id="L1128">                        GSON.toJson(this.game, writer);</span>
+<span class="fc" id="L1129">                        return &quot;Save file &quot; + filename;</span>
+<span class="fc" id="L1130">                    }catch(IOException e){</span>
+<span class="fc" id="L1131">                        return &quot;Save failed: &quot; + e.getMessage();</span>
+                    }
+                }
+
+                case &quot;load&quot;:{
+<span class="fc bfc" id="L1136" title="All 2 branches covered.">                    if(parts.length &lt; 2){</span>
+<span class="fc" id="L1137">                        return &quot;Invalid&quot;;</span>
+                    }
+<span class="fc" id="L1139">                    String filename = parts[1];</span>
+<span class="fc" id="L1140">                    try(FileReader reader = new FileReader(filename)){</span>
+<span class="fc" id="L1141">                       App load = GSON.fromJson(reader, App.class);</span>
+<span class="fc" id="L1142">                       this.gameCopy(load);</span>
+<span class="fc" id="L1143">                        return &quot;Load file &quot; + filename;</span>
+<span class="fc" id="L1144">                    }catch(IOException e){</span>
+<span class="fc" id="L1145">                        return &quot;Load failed: &quot; + e.getMessage();</span>
+                    }
+                }
+
+                case &quot;use&quot;:
+<span class="fc" id="L1150">                    return use(parts);</span>
+
+                default:
+<span class="fc" id="L1153">                    return &quot;Unknown command: &quot; + command;</span>
+            }
+<span class="nc" id="L1155">            return &quot;&quot;;</span>
+        }
+
+
+     /**
+     * Executes a command string by processing it and printing the result.
+     * @param line the raw command line to process
+     */
+    public void realizeCommand(String line){
+<span class="fc" id="L1164">        System.out.println(processCommand(line));</span>
+<span class="fc" id="L1165">    }</span>
+
+    /**
+     * Handles the activation of a single purple district card's effect during build time.
+     * Prompts the player for additional input as needed based on the card name.
+     * @param player the Player who built the purple district
+     * @param c the Card instance for the purple district
+     */
+    public void purpleCardsOne(Player player, Card c){
+<span class="fc bfc" id="L1174" title="All 2 branches covered.">        if (!scanner.hasNextLine()) {</span>
+<span class="fc" id="L1175">            return;</span>
+        }
+<span class="pc bpc" id="L1177" title="2 of 11 branches missed.">        switch(c.getName().toLowerCase()){</span>
+            case &quot;observatory&quot;:
+<span class="fc" id="L1179">                List&lt;Card&gt; three = new ArrayList&lt;&gt;();</span>
+<span class="fc bfc" id="L1180" title="All 2 branches covered.">                for(int i = 0; i &lt; 3; i++){</span>
+<span class="fc" id="L1181">                    three.add(deck.drawOrThrow());</span>
+                                    
+                }
+<span class="fc" id="L1184">                System.out.println(&quot;Top 3 cards: &quot; + three);</span>
+<span class="fc bfc" id="L1185" title="All 2 branches covered.">                for(int i = 0; i &lt; three.size(); i++){</span>
+<span class="fc" id="L1186">                    System.out.println((i + 1) + &quot;: &quot; + three.get(i).getName());</span>
+                }
+<span class="fc" id="L1188">                System.out.print(&quot;Choose one from the top three cards: &quot;);</span>
+                int choose;
+                try{
+<span class="fc" id="L1191">                    choose = Integer.parseInt(scanner.nextLine().trim()) - 1;</span>
+<span class="nc" id="L1192">                }catch(NumberFormatException e){</span>
+<span class="nc" id="L1193">                    choose = 0;</span>
+<span class="fc" id="L1194">                }</span>
+                
+<span class="fc" id="L1196">                Card save = three.get(choose);</span>
+<span class="fc" id="L1197">                player.drawCard(save);</span>
+<span class="fc bfc" id="L1198" title="All 2 branches covered.">                for(int i = 0; i &lt; three.size(); i++){</span>
+<span class="fc bfc" id="L1199" title="All 2 branches covered.">                    if(i != choose){</span>
+<span class="fc" id="L1200">                        deck.addBottom(three.get(i));</span>
+                    }
+                }
+<span class="fc" id="L1203">                System.out.println(&quot;Observatory: keep &quot; + save.getName() + &quot; in handcards.&quot;);</span>
+<span class="fc" id="L1204">                break;</span>
+                            
+            case &quot;lighthouse&quot;:
+<span class="fc" id="L1207">                Card top = deck.drawOrThrow();</span>
+<span class="fc" id="L1208">                player.drawCard((top));</span>
+<span class="fc" id="L1209">                deck.shuffle();</span>
+<span class="fc" id="L1210">                System.out.println(&quot;Lighthouse: you can pick a card &quot; + top.getName());</span>
+<span class="fc" id="L1211">                break;</span>
+                            
+            case &quot;belltower&quot;:
+<span class="fc" id="L1214">                System.out.println(&quot;Bell Tower: when built, the game will end after the round in which a player first places his 7th district.(yes or no) &quot;);</span>
+<span class="fc" id="L1215">                String line = scanner.nextLine().trim().toLowerCase();</span>
+<span class="fc bfc" id="L1216" title="All 2 branches covered.">                if(&quot;yes&quot;.equals(line)){</span>
+<span class="fc" id="L1217">                    bellTower = true;</span>
+<span class="fc" id="L1218">                    System.out.println(&quot;the game will end after the round in which a player first places his 7th district.  &quot;);</span>
+                }else{
+<span class="fc" id="L1220">                    System.out.println(&quot;The BellTower ability won't activate&quot;);</span>
+                }
+<span class="fc" id="L1222">                break;</span>
+                            
+            case &quot;hospital&quot;:
+<span class="fc" id="L1225">                System.out.println(&quot;Hospital: ven if you are assassinated, you may take an action during your turn  &quot;);</span>
+<span class="fc" id="L1226">                break;</span>
+                            
+            case &quot;museum&quot;:
+<span class="fc" id="L1229">                System.out.println(&quot;Museum: on your turn, you may place on district card from your hand face down under the Museum. &quot;);</span>
+<span class="fc bfc" id="L1230" title="All 2 branches covered.">                if(player.getHandCards().isEmpty()){</span>
+<span class="fc" id="L1231">                    System.out.println(&quot; No cards invalid&quot;);</span>
+<span class="fc" id="L1232">                    break;</span>
+                 }
+<span class="fc" id="L1234">                System.out.println(&quot;Your handcards: &quot;);</span>
+<span class="fc bfc" id="L1235" title="All 2 branches covered.">                for(int i = 0; i&lt; player.getHandCards().size(); i++){</span>
+<span class="fc" id="L1236">                    System.out.println(&quot; &quot; + (i + 1) + &quot;: &quot; + player.getHandCards().get(i).getName());</span>
+                }
+<span class="fc" id="L1238">                System.out.print(&quot;Choose one to place under Museum (1-&quot; + player.getHandCards().size() + &quot;), or enter 0 to skip: &quot;);</span>
+                int chooose;
+                try{
+<span class="fc" id="L1241">                    choose = Integer.parseInt(scanner.nextLine().trim());</span>
+<span class="nc" id="L1242">                }catch(NumberFormatException e){</span>
+<span class="nc" id="L1243">                    choose = 0;</span>
+<span class="fc" id="L1244">                }</span>
+<span class="pc bpc" id="L1245" title="1 of 4 branches missed.">                if(choose &gt; 1 &amp;&amp; choose &lt;= player.getHandCards().size()){</span>
+<span class="fc" id="L1246">                    Card choosed = player.getHandCards().remove(choose - 1);</span>
+<span class="fc" id="L1247">                    System.out.println(choosed.getName() + &quot; is placed under museum&quot;);</span>
+<span class="fc" id="L1248">                }else{</span>
+<span class="fc" id="L1249">                    System.out.println(&quot;SKIP&quot;);</span>
+                }
+<span class="fc" id="L1251">                break;</span>
+                            
+            case &quot;quarry&quot;:
+<span class="fc" id="L1254">                System.out.println(&quot;Quarry: when building, you may play a district already found in your city.  You may only have one such duplicate district in your city at any one time&quot;);</span>
+<span class="fc" id="L1255">                break;</span>
+                            
+            case &quot;school of magic&quot;:
+<span class="fc" id="L1258">                System.out.println(&quot;School of Magic: for the purposes of income, the School Of Magic is considered to be the color of your choice.&quot;);</span>
+                String colour;
+                 while(true){
+<span class="fc" id="L1261">                    colour = scanner.nextLine().trim().toLowerCase();</span>
+<span class="pc bpc" id="L1262" title="5 of 8 branches missed.">                    if(colour.equals(&quot;yellow&quot;) || colour.equals(&quot;blue&quot;) || colour.equals(&quot;green&quot;) || colour.equals(&quot;red&quot;)){</span>
+<span class="nc" id="L1263">                        break;</span>
+                    }
+<span class="nc" id="L1265">                    System.out.println(&quot;Invalid colour.Enter one of: yellow, blue, green, red. &quot;);</span>
+                }
+<span class="fc" id="L1267">                player.setSchoolOfMagicColour(colour);</span>
+<span class="fc" id="L1268">                System.out.println(&quot;School Of Magic will count as &quot; + colour + &quot; districts for income.&quot;);</span>
+<span class="fc" id="L1269">                break;</span>
+                            
+            case &quot;library&quot;:
+<span class="nc" id="L1272">                System.out.println(&quot;Library: if you choose to draw cards when you take an action, you keep both of the cards you have drawn.&quot;);</span>
+<span class="nc" id="L1273">                break;</span>
+
+            case &quot;haunted city&quot;:
+<span class="fc" id="L1276">                System.out.println(&quot;Haunted city: For the purposes of victory points, the Haunted City is considered to be of the color of your choice.  You cannot use this ability if you built it during the last round of the game &quot;);</span>
+                String hauntedCity;
+                while(true){
+<span class="fc" id="L1279">                    hauntedCity = scanner.nextLine().trim().toLowerCase();</span>
+<span class="pc bpc" id="L1280" title="6 of 8 branches missed.">                    if(hauntedCity.equals(&quot;yellow&quot;) || hauntedCity.equals(&quot;red&quot;) || hauntedCity.equals(&quot;blue&quot;) || hauntedCity.equals(&quot;green&quot;) ){</span>
+<span class="nc" id="L1281">                        break;</span>
+                    }
+<span class="nc" id="L1283">                    System.out.println(&quot;Enter one of : yellow, blue, red, green&quot;);</span>
+                }
+<span class="fc" id="L1285">                player.setHauntedCity(hauntedCity);</span>
+<span class="fc" id="L1286">                System.out.println(&quot;Haunted City will count as &quot; + hauntedCity + &quot; for scores&quot;);</span>
+<span class="fc" id="L1287">                break;</span>
+
+            case &quot;throne room&quot;:
+<span class="fc" id="L1290">                System.out.println(&quot;Throne Room : Every time the Crown switches players, you receive one gold from the bank.&quot;);</span>
+<span class="fc" id="L1291">                break;</span>
+
+            default:
+                 break;
+        }
+                            
+<span class="fc" id="L1297">    }</span>
+
+    /**
+     * Facilitates using a built purple district by delegating to activate().
+     * @param parts command tokens where parts[1] is the district name
+     * @return result message of the activation or error
+     */
+    public String use(String[] parts){
+<span class="fc" id="L1305">        Player player = game.getCurrentPlayer();</span>
+<span class="fc" id="L1306">        String name = parts[1].toLowerCase();</span>
+<span class="fc" id="L1307">        Card built = null;</span>
+<span class="fc bfc" id="L1308" title="All 2 branches covered.">        for(Card card: player.getBuildDistricCards()){</span>
+<span class="pc bpc" id="L1309" title="2 of 4 branches missed.">            if(card.getName().equalsIgnoreCase(name) &amp;&amp; card.getColour().equalsIgnoreCase(&quot;purple&quot;)){</span>
+<span class="fc" id="L1310">                built = card;</span>
+<span class="fc" id="L1311">                break;</span>
+            }
+<span class="nc" id="L1313">        }</span>
+<span class="fc bfc" id="L1314" title="All 2 branches covered.">        if(built == null){</span>
+<span class="fc" id="L1315">            return &quot;You have not built a purple district named '&quot; + parts[1] + &quot;'.&quot;;</span>
+        }
+<span class="fc" id="L1317">        return activate(player, built, parts);</span>
+    }
+
+    /**
+     * Activates a specific purple district's ability during the turn phase.
+     * @param player the Player invoking the ability
+     * @param card the purple district Card to activate
+     * @param parts command tokens containing usage parameters
+     * @return result message or error description
+     */
+    public String activate(Player player, Card card, String[] parts){
+<span class="fc bfc" id="L1328" title="All 4 branches covered.">        switch(card.getName().toLowerCase()){</span>
+            case &quot;laboratory&quot;:
+<span class="pc bpc" id="L1330" title="1 of 2 branches missed.">                if(player.laboratory){</span>
+<span class="nc" id="L1331">                    return &quot;Laboratory ability has been already used&quot;;</span>
+                }
+                int index;
+                try{
+<span class="fc" id="L1335">                    index = Integer.parseInt(parts[2]) - 1;</span>
+<span class="nc" id="L1336">                }catch(NumberFormatException e){</span>
+<span class="nc" id="L1337">                    return &quot;Invalid hand index&quot;;</span>
+<span class="fc" id="L1338">                }</span>
+<span class="fc" id="L1339">                List&lt;Card&gt; handcards = player.getHandCards();</span>
+<span class="pc bpc" id="L1340" title="2 of 4 branches missed.">                if(index &lt; 0 || index &gt;= handcards.size()){</span>
+<span class="nc" id="L1341">                    return &quot;Invalid&quot;;</span>
+                }
+<span class="fc" id="L1343">                Card discard = handcards.remove(index);</span>
+<span class="fc" id="L1344">                player.addMoney(1);</span>
+<span class="fc" id="L1345">                player.laboratory = true;</span>
+<span class="fc" id="L1346">                return &quot;Discard &quot; + discard.getName() + &quot; and receive 1 gold&quot;;</span>
+            
+            case &quot;smithy&quot;:
+<span class="pc bpc" id="L1349" title="1 of 2 branches missed.">                if(player.smithy){</span>
+<span class="nc" id="L1350">                    return &quot;Smithy ability has been already use&quot;;</span>
+                }
+
+<span class="pc bpc" id="L1353" title="1 of 2 branches missed.">                if(player.getMoney() &lt; 2){</span>
+<span class="nc" id="L1354">                    return &quot;Insufficient gold to use Simthy&quot;;</span>
+                }
+
+<span class="fc" id="L1357">                player.spendMoney(2);</span>
+<span class="fc bfc" id="L1358" title="All 2 branches covered.">                for(int i = 0; i &lt; 3; i++){</span>
+<span class="fc" id="L1359">                    player.drawCard(deck.drawOrThrow());</span>
+                }
+<span class="fc" id="L1361">                player.smithy = true;</span>
+<span class="fc" id="L1362">                return &quot;Paid 2 gold and drew 3 cards: &quot; + player.getMoney();</span>
+
+            case &quot;armory&quot;:
+<span class="pc bpc" id="L1365" title="1 of 2 branches missed.">                if(player.armory){</span>
+<span class="nc" id="L1366">                    return &quot;Armory ability has been already use&quot;;</span>
+                }
+<span class="pc bpc" id="L1368" title="1 of 2 branches missed.">                if(parts.length != 3){</span>
+<span class="fc" id="L1369">                    return &quot;Invalid&quot;;</span>
+                }
+                int targetID;
+                int destroyIndex;
+                try{
+<span class="nc" id="L1374">                    targetID = Integer.parseInt(parts[1]);</span>
+<span class="nc" id="L1375">                    destroyIndex = Integer.parseInt(parts[2]) - 1;</span>
+
+<span class="nc" id="L1377">                }catch(NumberFormatException e){</span>
+<span class="nc" id="L1378">                    return &quot;Invalid&quot;;</span>
+<span class="nc" id="L1379">                }</span>
+<span class="nc" id="L1380">                Player target = game.getOtherPlayer(targetID);</span>
+<span class="nc bnc" id="L1381" title="All 2 branches missed.">                if(target == null){</span>
+<span class="nc" id="L1382">                    return &quot;No such player&quot;;</span>
+                }
+<span class="nc" id="L1384">                List&lt;Card&gt; built = target.getBuildDistricCards();</span>
+<span class="nc bnc" id="L1385" title="All 4 branches missed.">                if(destroyIndex &lt; 0 || destroyIndex &gt;= built.size()){</span>
+<span class="nc" id="L1386">                    return &quot; Invalid&quot;;</span>
+                }
+<span class="nc" id="L1388">                List&lt;Card&gt; Armory = player.getBuildDistricCards();</span>
+<span class="nc" id="L1389">                Armory.remove(card);</span>
+<span class="nc" id="L1390">                Card remove = built.remove(destroyIndex);</span>
+<span class="nc" id="L1391">                player.armory = true;</span>
+<span class="nc" id="L1392">                return &quot;Armory self-destructed. Destroyed Player &quot; + targetID +&quot; 's &quot; + remove.getName();</span>
+
+            default:
+<span class="fc" id="L1395">                return &quot;Invalid&quot;;</span>
+        }
+    }
+
+    /**
+     * Performs end-of-turn effects for built districts (e.g., Poor House, Park) and checks for game end.
+     * @param player the Player whose turn is ending
+     */
+    public void end(Player player){
+<span class="fc bfc" id="L1404" title="All 2 branches covered.">        for(Card card: player.getBuildDistricCards()){</span>
+<span class="fc bfc" id="L1405" title="All 2 branches covered.">            if(card.getName().equalsIgnoreCase(&quot;poor house&quot;)){</span>
+<span class="pc bpc" id="L1406" title="1 of 2 branches missed.">                if(player.getMoney() == 0){</span>
+<span class="fc" id="L1407">                    player.addMoney(1);</span>
+<span class="fc" id="L1408">                    System.out.println(&quot;Poor house: If you have no gold at the end of your turn, receive one gold from the bank.&quot;);</span>
+                }
+                break;
+            }
+<span class="fc" id="L1412">        }</span>
+<span class="fc bfc" id="L1413" title="All 2 branches covered.">        for(Card card: player.getBuildDistricCards()){</span>
+<span class="fc bfc" id="L1414" title="All 2 branches covered.">            if(card.getName().equalsIgnoreCase(&quot;park&quot;)){</span>
+<span class="pc bpc" id="L1415" title="1 of 2 branches missed.">                if(player.getHandCards().isEmpty()){</span>
+<span class="fc" id="L1416">                    System.out.println(&quot;Park: If you have no cards in your hand at the end of your turn, you may draw 2 cards form the District Deck.&quot;);</span>
+<span class="fc bfc" id="L1417" title="All 2 branches covered.">                    for(int i = 0; i &lt; 2; i++){</span>
+<span class="fc" id="L1418">                        player.drawCard(deck.drawOrThrow());</span>
+                    }
+                }
+                break;
+            }
+<span class="fc" id="L1423">        } </span>
+<span class="fc" id="L1424">        checkOver();  </span>
+<span class="fc" id="L1425">    }</span>
+
+     /**
+     * Calculates and displays final scores for all players, applying special purple district scoring.
+     */
+    public void gameOver(){
+<span class="fc bfc" id="L1431" title="All 2 branches covered.">        for(Player player: game.getPlayers()){</span>
+<span class="fc" id="L1432">            System.out.println(&quot;Calculating score for Player &quot;+ player.getId());</span>
+<span class="fc" id="L1433">            int score = 0;</span>
+<span class="fc" id="L1434">            System.out.println(&quot;Base scores: &quot;);</span>
+<span class="fc bfc" id="L1435" title="All 2 branches covered.">            for(Card card: player.getBuildDistricCards()){</span>
+<span class="fc" id="L1436">                String name = card.getName().toLowerCase();</span>
+                int value;
+<span class="fc bfc" id="L1438" title="All 4 branches covered.">                if(name.equals(&quot;dragon gate&quot;) || name.equals(&quot;university&quot;)){</span>
+<span class="fc" id="L1439">                    value = 8;</span>
+<span class="fc" id="L1440">                    System.out.println(card.getName() + &quot;: value 8 scores at the end&quot;);</span>
+                }else{
+<span class="fc" id="L1442">                    value = card.getCost();</span>
+<span class="fc" id="L1443">                    System.out.println(card.getName() + &quot;: cost &quot; + card.getCost());</span>
+                }
+<span class="fc" id="L1445">                score += value;</span>
+<span class="fc" id="L1446">            }</span>
+<span class="fc" id="L1447">            boolean mapRoom = false;</span>
+<span class="fc bfc" id="L1448" title="All 2 branches covered.">            for(Card c : player.getBuildDistricCards()){</span>
+<span class="fc bfc" id="L1449" title="All 2 branches covered.">                if(&quot;map room&quot;.equalsIgnoreCase(c.getName())){</span>
+<span class="fc" id="L1450">                    mapRoom = true;</span>
+<span class="fc" id="L1451">                    break;</span>
+                }
+<span class="fc" id="L1453">            }</span>
+<span class="fc bfc" id="L1454" title="All 2 branches covered.">            if(mapRoom){</span>
+<span class="fc" id="L1455">                int handcards = player.getHandCards().size();</span>
+<span class="fc" id="L1456">                score += handcards;</span>
+<span class="fc" id="L1457">                System.out.println(&quot; Map room bonus : &quot; + handcards +&quot; scores (1 score per card).&quot;);</span>
+<span class="fc" id="L1458">            } else {</span>
+<span class="fc" id="L1459">                System.out.println(&quot;  No Map Room&quot;);</span>
+            }
+
+<span class="fc" id="L1462">            boolean imperialTreasury = false;</span>
+<span class="fc bfc" id="L1463" title="All 2 branches covered.">            for(Card card: player.getBuildDistricCards()){</span>
+<span class="fc bfc" id="L1464" title="All 2 branches covered.">                if(&quot;Imperial Treasury&quot;.equalsIgnoreCase(card.getName())){</span>
+<span class="fc" id="L1465">                    imperialTreasury = true;</span>
+<span class="fc" id="L1466">                    break;</span>
+                }
+<span class="fc" id="L1468">            }</span>
+<span class="fc bfc" id="L1469" title="All 2 branches covered.">            if(imperialTreasury){</span>
+<span class="fc" id="L1470">                int remain = player.getMoney();</span>
+<span class="fc" id="L1471">                score += remain;</span>
+<span class="fc" id="L1472">                System.out.println(&quot;Imperial Treasury bonus: &quot; + remain + &quot; points (1 point per gold).&quot;);</span>
+<span class="fc" id="L1473">            } else {</span>
+<span class="fc" id="L1474">                System.out.println(&quot;  No Imperial Treasury.&quot;);</span>
+            }
+
+<span class="fc" id="L1477">            boolean wishingWell = false;</span>
+<span class="fc bfc" id="L1478" title="All 2 branches covered.">            for(Card card: player.getBuildDistricCards()){</span>
+<span class="fc bfc" id="L1479" title="All 2 branches covered.">                if(&quot;wishing well&quot;.equalsIgnoreCase(card.getName())){</span>
+<span class="fc" id="L1480">                    wishingWell = true;</span>
+<span class="fc" id="L1481">                    break;</span>
+                }
+<span class="fc" id="L1483">            }</span>
+<span class="fc bfc" id="L1484" title="All 2 branches covered.">            if(wishingWell){</span>
+<span class="fc" id="L1485">                int purple = 0;</span>
+<span class="fc bfc" id="L1486" title="All 2 branches covered.">                for(Card card: player.getBuildDistricCards()){</span>
+<span class="pc bpc" id="L1487" title="1 of 4 branches missed.">                    if(!card.getName().equalsIgnoreCase(&quot;wishing well&quot;) &amp;&amp; card.getColour().equalsIgnoreCase(&quot;purple&quot;)){</span>
+<span class="fc" id="L1488">                        purple++;</span>
+                    }
+<span class="fc" id="L1490">                }</span>
+<span class="fc" id="L1491">                score += purple;</span>
+<span class="fc" id="L1492">                System.out.println(&quot;Wishing well : Other purple districts in your city: &quot; + purple + &quot; points (1 per other purple).&quot;);</span>
+<span class="fc" id="L1493">            }else{</span>
+<span class="fc" id="L1494">                System.out.println(&quot;No wishing well&quot;);</span>
+            }
+            
+<span class="fc" id="L1497">            boolean museum = false;</span>
+<span class="fc bfc" id="L1498" title="All 2 branches covered.">            for(Card c: player.getBuildDistricCards()){</span>
+<span class="fc bfc" id="L1499" title="All 2 branches covered.">                if(&quot;museum&quot;.equalsIgnoreCase(c.getName())){</span>
+<span class="fc" id="L1500">                    museum = true;</span>
+<span class="fc" id="L1501">                    break;</span>
+                }
+<span class="fc" id="L1503">            }</span>
+
+<span class="fc bfc" id="L1505" title="All 2 branches covered.">            if(museum){</span>
+<span class="fc" id="L1506">                List&lt;Card&gt; under = player.getMuseum();</span>
+<span class="fc" id="L1507">                int underPoints = under.size();</span>
+<span class="fc" id="L1508">                score += underPoints;</span>
+<span class="fc" id="L1509">                System.out.println(&quot;Cards under Museum: add&quot; + underPoints + &quot; points.&quot;);</span>
+<span class="fc" id="L1510">            }else{</span>
+<span class="fc" id="L1511">                System.out.println(&quot;No museum&quot;);</span>
+            }
+
+<span class="fc" id="L1514">            System.out.println(&quot;Player &quot; + player.getId() + &quot; total score: &quot; + score);</span>
+<span class="fc" id="L1515">            System.out.println();</span>
+<span class="fc" id="L1516">        }</span>
+<span class="fc" id="L1517">    }</span>
+    
+
+    /**
+     * Checks for Bell Tower or standard game-over conditions and exits if met.
+     */
+    public void checkOver(){
+<span class="fc bfc" id="L1524" title="All 2 branches covered.">        if(bellTower){</span>
+<span class="pc bpc" id="L1525" title="1 of 2 branches missed.">            for(Player player: game.getPlayers()){</span>
+<span class="pc bpc" id="L1526" title="1 of 2 branches missed.">                if(player.getBuildDistricCards().size() &gt;= 7){</span>
+<span class="fc" id="L1527">                    System.out.println(&quot;Bell Tower condition activated by Player &quot; + player.getId() + &quot;. Game over!&quot;);</span>
+<span class="fc" id="L1528">                    gameOver();</span>
+<span class="nc" id="L1529">                    System.exit(0);</span>
+                }
+<span class="nc" id="L1531">            }</span>
+        }
+<span class="fc bfc" id="L1533" title="All 2 branches covered.">        for(Player player: game.getPlayers()){</span>
+<span class="fc bfc" id="L1534" title="All 2 branches covered.">            if(player.getBuildDistricCards().size() &gt;= 8){</span>
+<span class="fc" id="L1535">                System.out.println(&quot;Player &quot; + player.getId() + &quot; has built 8 districts. Game over!&quot;);</span>
+<span class="fc" id="L1536">                gameOver();</span>
+<span class="nc" id="L1537">                System.exit(0);</span>
+            }
+<span class="fc" id="L1539">        }</span>
+<span class="fc" id="L1540">    }</span>
+
+    /**
+     * Program entry point: prompts for player count and starts game loop.
+     */
+    
+     public static void main(String[] args) {
+<span class="fc" id="L1547">        Scanner scanner = new Scanner(System.in);</span>
+        int numberOfPlayers;
+        do{
+<span class="fc" id="L1550">            System.out.print(&quot;Enter number of players (4-7): &quot;);</span>
+<span class="fc" id="L1551">            numberOfPlayers = scanner.nextInt();</span>
+<span class="fc bfc" id="L1552" title="All 4 branches covered.">        }while(numberOfPlayers &lt; 4 || numberOfPlayers &gt; 7);</span>
+
+<span class="fc" id="L1554">        App app = new App(numberOfPlayers);</span>
+<span class="fc" id="L1555">        app.run();</span>
+        
+<span class="fc" id="L1557">    }</span>
+    
+
+
+    
+
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.9.202303310957</span></div></body></html>

@@ -1,0 +1,681 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Citadels</title>
+<script src="https://cdn.jsdelivr.net/npm/sockjs-client@1/dist/sockjs.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/stompjs@2.3.3/lib/stomp.min.js"></script>
+<script src="https://unpkg.com/react@18/umd/react.development.js"></script>
+<script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+<script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:#0f0f1a;color:#e2e8f0;font-family:'Segoe UI',sans-serif;min-height:100vh}
+
+/* ── Layout ── */
+.screen{display:flex;flex-direction:column;height:100vh;padding:12px;gap:10px}
+.top-bar{display:flex;align-items:center;justify-content:space-between;
+  background:#1a1a2e;border:1px solid #2d2d4e;border-radius:10px;padding:10px 18px}
+.main-area{display:flex;gap:10px;flex:1;overflow:hidden}
+.players-col{display:flex;flex-direction:column;gap:8px;width:340px;overflow-y:auto}
+.center-col{flex:1;display:flex;flex-direction:column;gap:8px;overflow:hidden}
+.right-col{width:300px;display:flex;flex-direction:column;gap:8px}
+
+/* ── Phase badge ── */
+.phase-badge{padding:4px 12px;border-radius:20px;font-size:.75rem;font-weight:700;letter-spacing:.05em}
+.phase-SELECTION,.phase-HUMAN_SELECTION{background:#7c3aed;color:#fff}
+.phase-TURN,.phase-HUMAN_TURN_ACTION,.phase-HUMAN_TURN_BUILD{background:#065f46;color:#6ee7b7}
+.phase-GAME_OVER{background:#7f1d1d;color:#fca5a5}
+.phase-INIT{background:#374151;color:#9ca3af}
+
+/* ── Cards ── */
+.card{border-radius:8px;border:2px solid;padding:6px 9px;cursor:pointer;
+  transition:transform .15s,box-shadow .15s;user-select:none;min-width:90px}
+.card:hover{transform:translateY(-3px);box-shadow:0 6px 18px rgba(0,0,0,.5)}
+.card.yellow{border-color:#f59e0b;background:#1c1600}
+.card.blue  {border-color:#3b82f6;background:#00101f}
+.card.green {border-color:#10b981;background:#001409}
+.card.red   {border-color:#ef4444;background:#1a0000}
+.card.purple{border-color:#8b5cf6;background:#120020}
+.card.default{border-color:#6b7280;background:#111}
+.card-name{font-size:.8rem;font-weight:600;line-height:1.2}
+.card-meta{font-size:.7rem;opacity:.7;margin-top:2px}
+.card.buildable:hover{box-shadow:0 0 0 3px #10b981}
+
+/* ── Player panel ── */
+.player-panel{background:#1a1a2e;border:1px solid #2d2d4e;border-radius:10px;padding:10px 12px}
+.player-panel.active{border-color:#10b981;box-shadow:0 0 0 1px #10b981}
+.player-panel.human{border-color:#3b82f6}
+.player-panel.me{border-color:#818cf8;box-shadow:0 0 0 1px #818cf8}
+.player-header{display:flex;align-items:center;gap:8px;margin-bottom:6px}
+.player-name{font-weight:700;font-size:.9rem}
+.gold-badge{background:#92400e;color:#fde68a;padding:2px 8px;border-radius:12px;font-size:.75rem;font-weight:700}
+.hand-badge{background:#1e3a5f;color:#93c5fd;padding:2px 8px;border-radius:12px;font-size:.75rem}
+.role-badge{background:#4c1d95;color:#c4b5fd;padding:2px 8px;border-radius:12px;font-size:.7rem}
+.city-row{display:flex;flex-wrap:wrap;gap:4px;margin-top:4px}
+.empty-city{font-size:.75rem;opacity:.4;padding:4px 0}
+
+/* ── Hand ── */
+.hand-section{background:#1a1a2e;border:1px solid #2d2d4e;border-radius:10px;padding:12px}
+.hand-section h3{font-size:.85rem;text-transform:uppercase;letter-spacing:.08em;opacity:.6;margin-bottom:8px}
+.hand-cards{display:flex;flex-wrap:wrap;gap:6px}
+.hand-card-large{border-radius:10px;border:2px solid;padding:10px 12px;cursor:pointer;
+  transition:transform .15s,box-shadow .15s;min-width:100px}
+.hand-card-large:hover{transform:translateY(-4px)}
+.hand-card-large.yellow{border-color:#f59e0b;background:#1c1600}
+.hand-card-large.blue  {border-color:#3b82f6;background:#00101f}
+.hand-card-large.green {border-color:#10b981;background:#001409}
+.hand-card-large.red   {border-color:#ef4444;background:#1a0000}
+.hand-card-large.purple{border-color:#8b5cf6;background:#120020}
+.hand-card-large.default{border-color:#6b7280;background:#111}
+.hand-card-large .card-name{font-size:.85rem}
+.hand-card-large .card-cost{font-size:.8rem;color:#fde68a;margin-top:3px}
+.hand-card-large .card-desc{font-size:.68rem;opacity:.6;margin-top:4px;line-height:1.3}
+
+/* ── Pending draw ── */
+.pending-draw{background:#0f2027;border:1px solid #3b82f6;border-radius:10px;padding:12px}
+.pending-draw h3{font-size:.85rem;color:#93c5fd;margin-bottom:8px}
+.pending-row{display:flex;gap:10px}
+.pending-card{border-radius:10px;border:2px solid;padding:12px;cursor:pointer;flex:1;
+  transition:transform .15s,box-shadow .15s;text-align:center}
+.pending-card:hover{transform:scale(1.04);box-shadow:0 0 0 3px #fff}
+
+/* ── Role selector ── */
+.overlay{position:fixed;inset:0;background:rgba(0,0,0,.75);display:flex;
+  align-items:center;justify-content:center;z-index:100}
+.role-modal{background:#1a1a2e;border:1px solid #4c1d95;border-radius:14px;
+  padding:24px;max-width:600px;width:90%}
+.role-modal h2{font-size:1.1rem;margin-bottom:16px;color:#c4b5fd}
+.role-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:8px}
+.role-card{background:#0f0f1a;border:2px solid #4c1d95;border-radius:8px;
+  padding:10px;cursor:pointer;transition:border-color .15s,transform .15s;text-align:center}
+.role-card:hover{border-color:#8b5cf6;transform:translateY(-2px)}
+.role-card .role-name{font-size:.85rem;font-weight:700;color:#c4b5fd}
+
+/* ── Action panel ── */
+.action-panel{background:#1a1a2e;border:1px solid #2d2d4e;border-radius:10px;padding:12px}
+.prompt-text{font-size:.8rem;color:#94a3b8;margin-bottom:10px;line-height:1.4}
+.btn-row{display:flex;flex-wrap:wrap;gap:6px}
+.btn{padding:7px 14px;border:none;border-radius:7px;cursor:pointer;
+  font-size:.8rem;font-weight:600;transition:opacity .15s,transform .1s}
+.btn:hover{opacity:.9;transform:scale(1.03)}
+.btn:disabled{opacity:.4;cursor:not-allowed;transform:none}
+.btn-gold  {background:#92400e;color:#fde68a}
+.btn-draw  {background:#1e3a5f;color:#93c5fd}
+.btn-end   {background:#374151;color:#d1d5db}
+.btn-danger{background:#7f1d1d;color:#fca5a5}
+.btn-purple{background:#4c1d95;color:#c4b5fd}
+.input-row{display:flex;gap:6px;margin-top:8px}
+.cmd-input{flex:1;background:#0f0f1a;border:1px solid #374151;border-radius:6px;
+  padding:6px 10px;color:#e2e8f0;font-size:.8rem;outline:none}
+.cmd-input:focus{border-color:#3b82f6}
+.btn-send{background:#1d4ed8;color:#fff;padding:6px 12px;border:none;border-radius:6px;
+  cursor:pointer;font-size:.8rem;font-weight:600}
+.waiting-turn{background:#1a1a2e;border:1px solid #374151;border-radius:8px;
+  padding:12px 16px;color:#94a3b8;font-size:.85rem;text-align:center}
+
+/* ── Event log ── */
+.event-log{background:#0a0a14;border:1px solid #1e1e3a;border-radius:10px;
+  flex:1;overflow:hidden;display:flex;flex-direction:column}
+.event-log h3{font-size:.75rem;text-transform:uppercase;letter-spacing:.1em;
+  opacity:.5;padding:8px 12px;border-bottom:1px solid #1e1e3a}
+.log-entries{flex:1;overflow-y:auto;padding:8px 12px;display:flex;flex-direction:column;gap:3px}
+.log-entry{font-size:.75rem;line-height:1.4;opacity:.85}
+.log-entry.win{color:#fde68a;font-weight:700}
+.log-entry.phase{color:#c4b5fd;font-weight:600}
+.log-entry.build{color:#6ee7b7}
+
+/* ── Start / Lobby screen ── */
+.lobby-screen{display:flex;align-items:center;justify-content:center;height:100vh}
+.lobby-card{background:#1a1a2e;border:1px solid #4c1d95;border-radius:16px;
+  padding:40px;text-align:center;max-width:480px;width:90%}
+.lobby-card h1{font-size:2rem;color:#c4b5fd;margin-bottom:6px}
+.lobby-card .subtitle{opacity:.6;font-size:.9rem;margin-bottom:28px}
+.tab-row{display:flex;background:#0f0f1a;border-radius:10px;padding:4px;margin-bottom:24px;gap:4px}
+.tab-btn{flex:1;padding:8px;border:none;border-radius:7px;cursor:pointer;
+  font-size:.85rem;font-weight:600;transition:background .15s,color .15s}
+.tab-btn.active{background:#4c1d95;color:#c4b5fd}
+.tab-btn:not(.active){background:transparent;color:#6b7280}
+.tab-btn:not(.active):hover{color:#9ca3af}
+.counter-row{display:flex;align-items:center;justify-content:space-between;
+  background:#0f0f1a;border-radius:8px;padding:8px 14px;margin-bottom:10px}
+.counter-label{font-size:.85rem;opacity:.7}
+.counter-ctrl{display:flex;align-items:center;gap:10px}
+.counter-btn{width:28px;height:28px;border:1px solid #4c1d95;border-radius:6px;
+  background:#1a1a2e;color:#c4b5fd;font-size:1rem;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;line-height:1}
+.counter-val{font-size:1rem;font-weight:700;color:#c4b5fd;min-width:20px;text-align:center}
+.action-btn{background:linear-gradient(135deg,#6d28d9,#4f46e5);color:#fff;
+  border:none;border-radius:10px;padding:11px 0;font-size:.95rem;
+  font-weight:700;cursor:pointer;width:100%;margin-top:6px;transition:opacity .15s}
+.action-btn:hover{opacity:.9}
+.action-btn:disabled{opacity:.4;cursor:not-allowed}
+.divider{display:flex;align-items:center;gap:10px;margin:16px 0;color:#374151;font-size:.8rem}
+.divider::before,.divider::after{content:'';flex:1;height:1px;background:#2d2d4e}
+.join-row{display:flex;gap:8px}
+.code-input{flex:1;background:#0f0f1a;border:1px solid #374151;border-radius:8px;
+  padding:10px 14px;color:#e2e8f0;font-size:.9rem;outline:none;text-transform:uppercase;
+  letter-spacing:.1em}
+.code-input:focus{border-color:#4c1d95}
+.join-btn{background:#4c1d95;color:#c4b5fd;border:none;border-radius:8px;
+  padding:10px 18px;font-size:.85rem;font-weight:700;cursor:pointer;white-space:nowrap}
+.join-btn:hover{background:#5b21b6}
+.error-msg{color:#f87171;font-size:.8rem;margin-top:10px}
+
+/* ── Waiting screen ── */
+.waiting-screen{display:flex;align-items:center;justify-content:center;height:100vh}
+.waiting-card{background:#1a1a2e;border:1px solid #4c1d95;border-radius:16px;
+  padding:40px;text-align:center;max-width:400px;width:90%}
+.waiting-card h2{color:#c4b5fd;font-size:1.3rem;margin-bottom:8px}
+.room-code{font-size:2.2rem;font-weight:800;color:#818cf8;letter-spacing:.15em;
+  background:#0f0f1a;border-radius:10px;padding:12px 24px;display:inline-block;margin:16px 0}
+.copy-btn{background:#1e3a5f;color:#93c5fd;border:none;border-radius:6px;
+  padding:5px 12px;font-size:.75rem;cursor:pointer;margin-left:8px}
+.waiting-status{font-size:.9rem;opacity:.6;margin-top:8px}
+.player-dots{display:flex;justify-content:center;gap:8px;margin:20px 0}
+.player-dot{width:36px;height:36px;border-radius:50%;border:2px solid #374151;
+  display:flex;align-items:center;justify-content:center;font-size:.75rem;font-weight:700}
+.player-dot.joined{border-color:#10b981;background:#002010;color:#6ee7b7}
+.player-dot.waiting{border-color:#374151;background:#0f0f1a;color:#4b5563;animation:pulse 1.5s infinite}
+@keyframes pulse{0%,100%{opacity:.5}50%{opacity:1}}
+
+/* ── Game Over ── */
+.gameover-banner{background:#7f1d1d;border:1px solid #ef4444;border-radius:10px;
+  padding:12px 16px;text-align:center}
+.gameover-banner h2{color:#fca5a5;font-size:1rem}
+.new-game-btn{margin-top:8px;background:#374151;color:#fff;border:none;
+  border-radius:7px;padding:6px 16px;cursor:pointer;font-size:.8rem;font-weight:600}
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/babel">
+const {useState, useEffect, useRef, useCallback} = React;
+
+const COLOR_CLASS = c => {
+  const m = {yellow:'yellow',blue:'blue',green:'green',red:'red',purple:'purple'};
+  return m[(c||'').toLowerCase()] || 'default';
+};
+
+// ── Small card chip (in city) ──────────────────────────────────────────────
+function CityCard({card, idx, canDestroy, onDestroy}) {
+  const cls = COLOR_CLASS(card.colour);
+  return (
+    <div className={`card ${cls}`} title={card.description || card.name}
+      onClick={canDestroy ? () => onDestroy(idx) : undefined}
+      style={canDestroy ? {cursor:'pointer'} : {cursor:'default'}}>
+      <div className="card-name">{card.name}</div>
+      <div className="card-meta">{card.colour} · {card.cost}g</div>
+    </div>
+  );
+}
+
+// ── Player panel ──────────────────────────────────────────────────────────
+function PlayerPanel({player, phase, myPlayerId, onDestroyDistrict}) {
+  const isMe = player.id === myPlayerId;
+  const isActive = player.isCurrentTurn;
+  const canDestroy = phase === 'HUMAN_TURN_BUILD' && !isMe;
+  return (
+    <div className={`player-panel ${isActive ? 'active' : ''} ${isMe ? 'me' : (player.isHuman ? 'human' : '')}`}>
+      <div className="player-header">
+        <span className="player-name">
+          {isMe ? `You (P${player.id})` : `Player ${player.id}${player.isHuman ? ' 👤' : ''}`}
+          {isActive && ' ●'}
+        </span>
+        <span className="gold-badge">💰 {player.gold}</span>
+        <span className="hand-badge">🃏 {player.handSize}</span>
+        {player.role && <span className="role-badge">{player.role}</span>}
+      </div>
+      <div className="city-row">
+        {player.city.length === 0
+          ? <span className="empty-city">No districts built yet</span>
+          : player.city.map((c, i) => (
+              <CityCard key={c.name + i} card={c} idx={i}
+                canDestroy={canDestroy}
+                onDestroy={() => onDestroyDistrict(player.id, i + 1)} />
+            ))
+        }
+      </div>
+    </div>
+  );
+}
+
+// ── Hand (human player) ───────────────────────────────────────────────────
+function HandPanel({hand, gold, phase, myTurn, onBuild}) {
+  if (!hand) return null;
+  const canBuild = phase === 'HUMAN_TURN_BUILD' && myTurn;
+  return (
+    <div className="hand-section">
+      <h3>Your Hand — {gold} gold</h3>
+      <div className="hand-cards">
+        {hand.map((c, i) => {
+          const affordable = c.cost <= gold;
+          const cls = COLOR_CLASS(c.colour);
+          return (
+            <div key={c.name + i}
+              className={`hand-card-large ${cls} ${canBuild && affordable ? 'buildable' : ''}`}
+              title={c.description || ''}
+              onClick={canBuild ? () => onBuild(i + 1) : undefined}>
+              <div className="card-name">{c.name}</div>
+              <div className="card-cost">{c.cost}g · {c.colour}</div>
+              {c.description && <div className="card-desc">{c.description}</div>}
+            </div>
+          );
+        })}
+        {hand.length === 0 && <span style={{opacity:.4,fontSize:'.8rem'}}>No cards in hand</span>}
+      </div>
+    </div>
+  );
+}
+
+// ── Pending draw choice ───────────────────────────────────────────────────
+function PendingDraw({cards, onChoose}) {
+  return (
+    <div className="pending-draw">
+      <h3>Choose one card to keep:</h3>
+      <div className="pending-row">
+        {cards.map((c, i) => (
+          <div key={i} className={`pending-card ${COLOR_CLASS(c.colour)}`}
+            onClick={() => onChoose(i + 1)}>
+            <div style={{fontWeight:700,marginBottom:4}}>{c.name}</div>
+            <div style={{fontSize:'.75rem',opacity:.7}}>{c.colour} · {c.cost}g</div>
+            {c.description && <div style={{fontSize:'.68rem',opacity:.5,marginTop:4}}>{c.description}</div>}
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+// ── Role selector modal ───────────────────────────────────────────────────
+function RoleSelector({roles, onSelect}) {
+  const roleDescs = {
+    Assassin:'Kill a character — they lose their turn.',
+    Thief:'Steal all gold from a character when revealed.',
+    Magician:'Swap hand or redraw cards.',
+    King:'Gold per yellow district. Receive crown.',
+    Bishop:'Gold per blue district. Protected from Warlord.',
+    Merchant:'Gold per green district + 1 extra gold.',
+    Architect:'Draw 2 extra cards. Build up to 3 districts.',
+    Warlord:'Gold per red district. Destroy opponents\' districts.',
+  };
+  return (
+    <div className="overlay">
+      <div className="role-modal">
+        <h2>🎭 Choose your character</h2>
+        <div className="role-grid">
+          {roles.map(r => (
+            <div key={r} className="role-card" onClick={() => onSelect(r)}>
+              <div className="role-name">{r}</div>
+              <div style={{fontSize:'.68rem',marginTop:4,opacity:.6}}>{roleDescs[r] || ''}</div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ── Action panel ──────────────────────────────────────────────────────────
+function ActionPanel({state, myPlayerId, onAction}) {
+  const [cmd, setCmd] = useState('');
+  const phase = state.phase;
+  const myTurn = state.currentActingPlayerId === myPlayerId;
+  const role = state.activeRole;
+
+  const send = useCallback((command) => { onAction(command); setCmd(''); }, [onAction]);
+  const sendCmd = () => { if (cmd.trim()) send(cmd.trim()); };
+
+  if (!myTurn && (phase === 'HUMAN_SELECTION' || phase === 'HUMAN_TURN_ACTION' || phase === 'HUMAN_TURN_BUILD')) {
+    return (
+      <div className="waiting-turn">
+        ⏳ Waiting for Player {state.currentActingPlayerId}...
+      </div>
+    );
+  }
+
+  const renderButtons = () => {
+    if (phase === 'SELECTION' || phase === 'TURN') {
+      return <span style={{fontSize:'.8rem',opacity:.5,fontStyle:'italic'}}>⚙️ AI is playing...</span>;
+    }
+    if (phase === 'HUMAN_TURN_ACTION' && !state.pendingCards) {
+      return <>
+        <button className="btn btn-gold" onClick={() => send('income')}>💰 Income (+2 gold)</button>
+        <button className="btn btn-draw" onClick={() => send('draw')}>🃏 Draw cards</button>
+        {role === 'Assassin' && <span style={{fontSize:'.75rem',opacity:.6}}>assassinate &lt;role&gt;</span>}
+        {role === 'Thief'    && <span style={{fontSize:'.75rem',opacity:.6}}>steal &lt;role&gt;</span>}
+      </>;
+    }
+    if (phase === 'HUMAN_TURN_BUILD') {
+      return <>
+        <button className="btn btn-end" onClick={() => send('end')}>✓ End Turn</button>
+        {role === 'Warlord'  && <span style={{fontSize:'.72rem',opacity:.6}}>destroy &lt;playerID&gt; &lt;pos&gt;</span>}
+        {role === 'Magician' && <>
+          <span style={{fontSize:'.72rem',opacity:.6}}>swap &lt;playerID&gt;</span>
+          <span style={{fontSize:'.72rem',opacity:.6}}>redraw &lt;1,2,...&gt;</span>
+        </>}
+      </>;
+    }
+    if (phase === 'GAME_OVER') {
+      return <span style={{color:'#fde68a',fontWeight:700}}>🏆 Game finished!</span>;
+    }
+    return null;
+  };
+
+  const showInput = myTurn && phase !== 'SELECTION' && phase !== 'TURN' && phase !== 'GAME_OVER';
+
+  return (
+    <div className="action-panel">
+      <div className="prompt-text">{state.prompt}</div>
+      <div className="btn-row">{renderButtons()}</div>
+      {showInput && (
+        <div className="input-row">
+          <input className="cmd-input" value={cmd}
+            onChange={e => setCmd(e.target.value)}
+            onKeyDown={e => e.key === 'Enter' && sendCmd()}
+            placeholder="type command..." autoFocus />
+          <button className="btn-send" onClick={sendCmd} disabled={!cmd.trim()}>Send</button>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ── Event log ─────────────────────────────────────────────────────────────
+function EventLog({log}) {
+  const endRef = useRef(null);
+  useEffect(() => { endRef.current?.scrollIntoView({behavior:'smooth'}); }, [log]);
+  const classify = entry => {
+    if (entry.includes('wins') || entry.includes('TOTAL')) return 'win';
+    if (entry.includes('TURN PHASE') || entry.includes('GAME OVER') || entry.includes('New round')) return 'phase';
+    if (entry.includes('built') || entry.includes('Built')) return 'build';
+    return '';
+  };
+  return (
+    <div className="event-log">
+      <h3>Game Log</h3>
+      <div className="log-entries">
+        {(log || []).map((e, i) => (
+          <div key={i} className={`log-entry ${classify(e)}`}>{e}</div>
+        ))}
+        <div ref={endRef}/>
+      </div>
+    </div>
+  );
+}
+
+// ── Lobby screen ──────────────────────────────────────────────────────────
+function LobbyScreen({onCreate, onJoin, loading, error}) {
+  const [tab, setTab] = useState('solo');
+  const [players, setPlayers] = useState(4);
+  const [humans, setHumans] = useState(2);
+  const [joinCode, setJoinCode] = useState('');
+
+  const soloStart = () => onCreate(players, 1);
+  const multiCreate = () => onCreate(players, Math.min(humans, players));
+  const doJoin = () => { if (joinCode.trim()) onJoin(joinCode.trim().toUpperCase()); };
+
+  return (
+    <div className="lobby-screen">
+      <div className="lobby-card">
+        <h1>🏰 Citadels</h1>
+        <p className="subtitle">Build the greatest city in the realm.</p>
+
+        <div className="tab-row">
+          <button className={`tab-btn ${tab==='solo'?'active':''}`} onClick={() => setTab('solo')}>Solo vs AI</button>
+          <button className={`tab-btn ${tab==='multi'?'active':''}`} onClick={() => setTab('multi')}>Multiplayer</button>
+        </div>
+
+        {tab === 'solo' && <>
+          <div className="counter-row">
+            <span className="counter-label">Total Players</span>
+            <div className="counter-ctrl">
+              <button className="counter-btn" onClick={() => setPlayers(Math.max(4, players-1))}>−</button>
+              <span className="counter-val">{players}</span>
+              <button className="counter-btn" onClick={() => setPlayers(Math.min(7, players+1))}>+</button>
+            </div>
+          </div>
+          <button className="action-btn" onClick={soloStart} disabled={loading}>
+            {loading ? 'Starting...' : '▶ Start Solo Game'}
+          </button>
+        </>}
+
+        {tab === 'multi' && <>
+          <div className="counter-row">
+            <span className="counter-label">Total Players</span>
+            <div className="counter-ctrl">
+              <button className="counter-btn" onClick={() => { const n=Math.max(2,players-1); setPlayers(n); setHumans(Math.min(humans,n)); }}>−</button>
+              <span className="counter-val">{players}</span>
+              <button className="counter-btn" onClick={() => setPlayers(Math.min(7, players+1))}>+</button>
+            </div>
+          </div>
+          <div className="counter-row">
+            <span className="counter-label">Human Players</span>
+            <div className="counter-ctrl">
+              <button className="counter-btn" onClick={() => setHumans(Math.max(2, humans-1))}>−</button>
+              <span className="counter-val">{Math.min(humans, players)}</span>
+              <button className="counter-btn" onClick={() => setHumans(Math.min(players, humans+1))}>+</button>
+            </div>
+          </div>
+          <button className="action-btn" onClick={multiCreate} disabled={loading}>
+            {loading ? 'Creating...' : '🔗 Create Room'}
+          </button>
+          <div className="divider">or join existing</div>
+          <div className="join-row">
+            <input className="code-input" value={joinCode}
+              onChange={e => setJoinCode(e.target.value.toUpperCase())}
+              onKeyDown={e => e.key === 'Enter' && doJoin()}
+              placeholder="ROOM CODE" maxLength={6} />
+            <button className="join-btn" onClick={doJoin} disabled={loading || !joinCode.trim()}>Join</button>
+          </div>
+        </>}
+
+        {error && <div className="error-msg">{error}</div>}
+      </div>
+    </div>
+  );
+}
+
+// ── Waiting screen ────────────────────────────────────────────────────────
+function WaitingScreen({gameId, lobby}) {
+  const copy = () => navigator.clipboard?.writeText(gameId).catch(()=>{});
+  const joined = lobby ? lobby.joinedCount : 1;
+  const total  = lobby ? lobby.humanCount  : 1;
+
+  return (
+    <div className="waiting-screen">
+      <div className="waiting-card">
+        <h2>🏰 Room Created</h2>
+        <p style={{opacity:.6,fontSize:'.85rem',marginBottom:4}}>Share this code with friends:</p>
+        <div>
+          <span className="room-code">{gameId}</span>
+          <button className="copy-btn" onClick={copy}>Copy</button>
+        </div>
+        <div className="player-dots">
+          {Array.from({length: total}, (_, i) => (
+            <div key={i} className={`player-dot ${i < joined ? 'joined' : 'waiting'}`}>
+              {i < joined ? `P${i+1}` : '?'}
+            </div>
+          ))}
+        </div>
+        <div className="waiting-status">
+          {joined >= total
+            ? '✅ All players joined! Starting...'
+            : `Waiting for ${total - joined} more player${total - joined > 1 ? 's' : ''}...`}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ── Game screen ───────────────────────────────────────────────────────────
+function GameScreen({state, myPlayerId, onAction, onNewGame}) {
+  const myTurn = state.currentActingPlayerId === myPlayerId;
+  const myPlayer = state.players?.find(p => p.id === myPlayerId);
+
+  return (
+    <div className="screen">
+      {/* ── Top bar ── */}
+      <div className="top-bar">
+        <span style={{fontWeight:700,fontSize:'1rem',color:'#c4b5fd'}}>🏰 Citadels</span>
+        <span className={`phase-badge phase-${state.phase}`}>
+          {state.phase?.replace(/_/g,' ')}
+          {state.activeRole && (state.phase === 'TURN' || state.phase?.startsWith('HUMAN_TURN'))
+            && ` · ${state.activeRole}`}
+        </span>
+        {state.gameId && (
+          <span style={{fontSize:'.72rem',opacity:.4,letterSpacing:'.05em'}}>#{state.gameId}</span>
+        )}
+        <button onClick={onNewGame}
+          style={{background:'#374151',color:'#d1d5db',border:'none',borderRadius:'7px',
+            padding:'5px 12px',cursor:'pointer',fontSize:'.75rem',fontWeight:600}}>
+          New Game
+        </button>
+      </div>
+
+      {/* ── Main area ── */}
+      <div className="main-area">
+        {/* ── Left: all players ── */}
+        <div className="players-col">
+          {state.players?.map(p => (
+            <PlayerPanel key={p.id} player={p} phase={state.phase}
+              myPlayerId={myPlayerId}
+              onDestroyDistrict={(tid, pos) => onAction(`destroy ${tid} ${pos}`)} />
+          ))}
+        </div>
+
+        {/* ── Center: hand + actions ── */}
+        <div className="center-col">
+          {state.pendingCards && myTurn && (
+            <PendingDraw cards={state.pendingCards} onChoose={n => onAction(`draw ${n}`)} />
+          )}
+          {myPlayer && !state.pendingCards && (
+            <HandPanel
+              hand={myPlayer.hand}
+              gold={myPlayer.gold}
+              phase={state.phase}
+              myTurn={myTurn}
+              onBuild={n => onAction(`build ${n}`)} />
+          )}
+          {state.phase === 'GAME_OVER' && (
+            <div className="gameover-banner">
+              <h2>🏆 Game Over!</h2>
+              <button className="new-game-btn" onClick={onNewGame}>Play Again</button>
+            </div>
+          )}
+          <ActionPanel state={state} myPlayerId={myPlayerId} onAction={onAction} />
+        </div>
+
+        {/* ── Right: event log ── */}
+        <div className="right-col">
+          <EventLog log={state.log}/>
+        </div>
+      </div>
+
+      {/* ── Role selector overlay (only for the acting player) ── */}
+      {state.phase === 'HUMAN_SELECTION' && state.availableRoles && myTurn && (
+        <RoleSelector roles={state.availableRoles} onSelect={r => onAction(r)}/>
+      )}
+    </div>
+  );
+}
+
+// ── Main App ──────────────────────────────────────────────────────────────
+function App() {
+  const [screen, setScreen]       = useState('lobby');
+  const [gameId, setGameId]       = useState('');
+  const [lobby, setLobby]         = useState(null);
+  const [myPlayerId, setMyPlayer] = useState(1);
+  const [state, setState]         = useState(null);
+  const [loading, setLoading]     = useState(false);
+  const [error, setError]         = useState(null);
+  const stompRef = useRef(null);
+
+  // Connect WS whenever gameId is set
+  useEffect(() => {
+    if (!gameId) return;
+
+    const socket = new SockJS('/ws');
+    const client = Stomp.over(socket);
+    client.debug = null;
+    client.heartbeat.outgoing = 0;
+    client.heartbeat.incoming = 0;
+    stompRef.current = client;
+
+    client.connect({}, () => {
+      client.subscribe('/topic/game/' + gameId, msg => {
+        setState(JSON.parse(msg.body));
+      });
+      // Ask server for current state (starts game if all humans joined)
+      client.send('/app/game/' + gameId + '/state', {}, '{}');
+    }, () => setError('WebSocket connection lost. Try refreshing.'));
+
+    return () => {
+      try { if (client.connected) client.disconnect(); } catch(e) {}
+    };
+  }, [gameId]);
+
+  // Switch to game screen once game is active
+  useEffect(() => {
+    if (state && state.phase && state.phase !== 'INIT') {
+      setScreen('game');
+    }
+  }, [state]);
+
+  const createGame = async (players, humans) => {
+    setLoading(true); setError(null);
+    try {
+      const res = await fetch(`/api/lobby/create?players=${players}&humans=${humans}`, {method:'POST'});
+      if (!res.ok) throw new Error('Server error');
+      const data = await res.json();
+      setLobby(data);
+      setMyPlayer(data.playerId);
+      setGameId(data.gameId);    // triggers WS useEffect
+      setScreen('waiting');
+    } catch(e) { setError(e.message); }
+    setLoading(false);
+  };
+
+  const joinGame = async (code) => {
+    setLoading(true); setError(null);
+    try {
+      const res = await fetch(`/api/lobby/join/${code}`, {method:'POST'});
+      if (!res.ok) throw new Error('Room not found or already full');
+      const data = await res.json();
+      setLobby(data);
+      setMyPlayer(data.playerId);
+      setGameId(data.gameId);
+      setScreen('waiting');
+    } catch(e) { setError(e.message); }
+    setLoading(false);
+  };
+
+  const sendAction = useCallback((command) => {
+    const client = stompRef.current;
+    if (!client || !client.connected) return;
+    client.send('/app/game/' + gameId + '/action', {},
+      JSON.stringify({playerId: myPlayerId, command}));
+  }, [gameId, myPlayerId]);
+
+  const newGame = () => {
+    try { if (stompRef.current?.connected) stompRef.current.disconnect(); } catch(e) {}
+    stompRef.current = null;
+    setGameId('');
+    setLobby(null);
+    setState(null);
+    setError(null);
+    setScreen('lobby');
+  };
+
+  if (screen === 'lobby')   return <LobbyScreen onCreate={createGame} onJoin={joinGame} loading={loading} error={error} />;
+  if (screen === 'waiting') return <WaitingScreen gameId={gameId} lobby={lobby} />;
+  if (!state) return <WaitingScreen gameId={gameId} lobby={lobby} />;
+
+  return <GameScreen state={state} myPlayerId={myPlayerId} onAction={sendAction} onNewGame={newGame} />;
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(<App/>);
+</script>
+</body>
+</html>

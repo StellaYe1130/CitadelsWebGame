@@ -1,0 +1,221 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>Game.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">Scaffold Info1113assignment2</a> &gt; <a href="index.source.html" class="el_package">citadels</a> &gt; <span class="el_source">Game.java</span></div><h1>Game.java</h1><pre class="source lang-java linenums">package citadels;
+
+import java.util.*;
+/**
+ * Represents the core game logic for Citadels, managing players, roles, and game state.
+ */
+public class Game{
+    /** The list of players participating in the game. */
+    private final List&lt;Player&gt; players;
+
+    /** Index of the current player's turn in the players list. */
+<span class="fc" id="L12">    private int currentIndex = 0;</span>
+
+    /** Roles that are still available for selection this round. */
+    private List&lt;Role&gt; availableRoles;
+
+    /** Mapping of players to the roles they have chosen. */
+<span class="fc" id="L18">    private Map&lt;Player, Role&gt; chosenRoles = new HashMap&lt;&gt;();</span>
+
+    /** The player who holds the King role from the previous round. */
+    private Player kingPlayer;
+      /** The player who is currently active in the game logic. */
+    private Player currentPlayer;
+
+    /**
+     * Constructs a new Game with the specified number of players.
+     * @param numberOfPlayers the number of players to create in this game
+     */
+<span class="fc" id="L29">    public Game(int numberOfPlayers){</span>
+<span class="fc" id="L30">        this.players = new ArrayList&lt;&gt;();</span>
+        
+<span class="fc bfc" id="L32" title="All 2 branches covered.">        for(int i = 1; i &lt;= numberOfPlayers; i++){</span>
+<span class="fc" id="L33">            Player player = new Player(i);</span>
+<span class="fc" id="L34">            players.add(player);</span>
+        }
+<span class="fc" id="L36">        this.kingPlayer = players.get(0);</span>
+<span class="fc" id="L37">        initRoles();</span>
+<span class="fc" id="L38">    }</span>
+
+    /**
+     * Initializes and shuffles the list of available roles for the round.
+     */
+    private void initRoles(){
+<span class="fc" id="L44">        Role[] rolesArray = Role.values();</span>
+<span class="fc" id="L45">        availableRoles = new ArrayList&lt;&gt;();</span>
+<span class="fc bfc" id="L46" title="All 2 branches covered.">        for(Role role: rolesArray){</span>
+<span class="fc" id="L47">            availableRoles.add(role);</span>
+        }
+<span class="fc" id="L49">        Collections.shuffle(availableRoles);</span>
+<span class="fc" id="L50">    }</span>
+
+    /**
+     * Retrieves the player whose turn it currently is.
+     * @return the current Player
+     */
+    public Player getCurrentPlayer(){
+<span class="fc" id="L57">        return players.get(currentIndex);</span>
+    }
+
+     /**
+     * Sets the internal reference to the current player.
+     * @param player the Player to set as current
+     */
+    public void setCurrentPlayer(Player player) {
+<span class="fc" id="L65">        this.currentPlayer = player;</span>
+<span class="fc" id="L66">    }</span>
+
+    /**
+     * Advances to and returns the next player in turn order.
+     * Wraps around to the first player when reaching the end of the list.
+     * @return the next Player in turn order
+     */
+    public Player getNextPlayer(){
+<span class="fc bfc" id="L74" title="All 2 branches covered.">        if (currentIndex &lt; players.size() - 1) {</span>
+<span class="fc" id="L75">            currentIndex++;</span>
+        }else{
+<span class="fc" id="L77">            currentIndex = 0;</span>
+        }
+<span class="fc" id="L79">        return getCurrentPlayer();</span>
+    }
+
+    /**
+     * Retrieves a copy of roles currently available for selection.
+     * @return a List of available Role values
+     */
+    public List&lt;Role&gt; getAvailableRoles(){
+<span class="fc" id="L87">        List&lt;Role&gt; roleCopy = new ArrayList&lt;&gt;();</span>
+<span class="fc bfc" id="L88" title="All 2 branches covered.">        for(Role role: availableRoles){</span>
+<span class="fc" id="L89">            roleCopy.add(role);</span>
+<span class="fc" id="L90">        }</span>
+<span class="fc" id="L91">        return roleCopy;</span>
+    }
+
+    /**
+     * Replaces the current set of available roles with a new list.
+     * @param roles the List of Role values to set as available
+     */
+    public void setAvailableRoles(List&lt;Role&gt; roles) {
+<span class="fc" id="L99">        this.availableRoles = new ArrayList&lt;&gt;(roles); </span>
+<span class="fc" id="L100">    }</span>
+
+
+    /**
+     * Allows the current player to choose a role by name if it is available.
+     * @param roleName the name of the role to choose (case-insensitive)
+     * @return true if the role was successfully chosen; false otherwise
+     */
+    public boolean choosenRole(String roleName){
+<span class="fc bfc" id="L109" title="All 2 branches covered.">        for(Role role: availableRoles){</span>
+<span class="fc bfc" id="L110" title="All 2 branches covered.">            if(role.name().equalsIgnoreCase(roleName)){</span>
+<span class="fc" id="L111">                chosenRoles.put(getCurrentPlayer(), role);</span>
+<span class="fc" id="L112">                availableRoles.remove(role);</span>
+<span class="fc" id="L113">                return true;</span>
+            }
+<span class="fc" id="L115">        }</span>
+<span class="fc" id="L116">        return false;</span>
+    }
+
+    /**
+     * Retrieves the role assigned to the specified player for the current round.
+     * @param player the Player whose chosen role is requested
+     * @return the Role assigned to that player, or null if none selected
+     */
+    public Role getRoleFor(Player player){
+<span class="fc" id="L125">        return chosenRoles.get(player);</span>
+    }
+
+    /**
+     * Returns a new List of all players in the game.
+     * @return a copy of the players list
+     */
+    public List&lt;Player&gt; getPlayers(){
+<span class="fc" id="L133">        return new ArrayList&lt;&gt;(players);</span>
+    }
+
+    /**
+     * Explicitly sets the internal currentIndex to a provided value.
+     * @param i the index to assign as the current turn index
+     */
+    public void setCurrentIndex(int i) {
+<span class="fc" id="L141">        this.currentIndex = i;</span>
+<span class="fc" id="L142">    }</span>
+
+    /**
+     * Resets the roles for a new round, clearing chosen roles and reinitializing available roles.
+     */
+    public void resetRoles() {
+<span class="fc" id="L148">        initRoles();</span>
+<span class="fc" id="L149">        chosenRoles.clear();</span>
+<span class="fc" id="L150">    }</span>
+    
+    /**
+     * Retrieves another player by their unique ID.
+     * @param id the integer ID of the player to find
+     * @return the Player with the matching ID, or null if not found
+     */
+    public Player getOtherPlayer(int id) {
+<span class="fc bfc" id="L158" title="All 2 branches covered.">        for (Player player : players) {</span>
+<span class="fc bfc" id="L159" title="All 2 branches covered.">            if (player.getId() == id) {</span>
+<span class="fc" id="L160">                return player;</span>
+            }
+<span class="fc" id="L162">        }</span>
+<span class="fc" id="L163">        return null;</span>
+    }
+
+    /**
+     * Sets the player who holds the King role at the start of a new turn phase.
+     * @param player the Player to assign as king
+     */
+    public void setKing(Player player) {
+<span class="fc" id="L171">        this.kingPlayer = player;</span>
+<span class="fc" id="L172">    }</span>
+
+    /**
+     * Retrieves the current King player.
+     * @return the Player assigned as king
+     */
+    public Player getKingPlayer() {
+<span class="fc" id="L179">        return kingPlayer;</span>
+    }
+
+    /**
+     * Performs a deep copy of another Game instance's state into this one.
+     * Copies players, current index, king, available roles, and chosen roles.
+     * @param other the Game instance to copy from
+     */
+    public void gameCopy(Game other) {
+<span class="pc bpc" id="L188" title="1 of 2 branches missed.">        if (this.players == null) return;</span>
+<span class="fc" id="L189">        this.players.clear();</span>
+<span class="fc bfc" id="L190" title="All 2 branches covered.">        for (Player p : other.getPlayers()) {</span>
+<span class="fc" id="L191">            this.players.add(new Player(p));</span>
+<span class="fc" id="L192">        }</span>
+
+<span class="fc" id="L194">        this.currentIndex = other.currentIndex;</span>
+<span class="fc" id="L195">        this.kingPlayer = other.kingPlayer;</span>
+
+<span class="pc bpc" id="L197" title="1 of 2 branches missed.">        if (this.availableRoles == null) this.availableRoles = new ArrayList&lt;&gt;();</span>
+<span class="fc" id="L198">        else this.availableRoles.clear();</span>
+<span class="fc" id="L199">        this.availableRoles.addAll(other.getAvailableRoles());</span>
+
+<span class="pc bpc" id="L201" title="1 of 2 branches missed.">        if (this.chosenRoles == null) this.chosenRoles = new HashMap&lt;&gt;();</span>
+<span class="fc" id="L202">        else this.chosenRoles.clear();</span>
+<span class="fc" id="L203">        this.chosenRoles.putAll(other.chosenRoles);</span>
+<span class="fc" id="L204">    }</span>
+
+
+    /**
+     * Determines if the game has ended based on any player having 8 or more built district cards.
+     * @return true if the game is over; false otherwise
+     */
+    public boolean gameOver() {
+<span class="fc bfc" id="L212" title="All 2 branches covered.">        for (Player p : players) {</span>
+<span class="pc bpc" id="L213" title="1 of 2 branches missed.">            if (p.getBuildDistricCards().size() &gt;= 8) {</span>
+<span class="nc" id="L214">                return true;</span>
+            }
+<span class="fc" id="L216">        }</span>
+<span class="fc" id="L217">        return false;</span>
+    }
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.9.202303310957</span></div></body></html>

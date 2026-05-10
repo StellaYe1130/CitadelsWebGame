@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>Deck.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">Scaffold Info1113assignment2</a> &gt; <a href="index.source.html" class="el_package">citadels</a> &gt; <span class="el_source">Deck.java</span></div><h1>Deck.java</h1><pre class="source lang-java linenums">package citadels;
+
+import java.util.*;
+
+/**
+ * The {@code Deck} class represents a stack of cards used in the Citadels game.
+ * It allows adding, drawing, shuffling, and accessing cards, providing standard deck operations.
+ * Internally, it maintains a list of cards where the top of the deck is at the end of the list.
+ */
+<span class="fc" id="L10">public class Deck {</span>
+
+    /** Internal list to store the cards in the deck. */
+<span class="fc" id="L13">    private final List&lt;Card&gt; cards = new ArrayList&lt;&gt;();</span>
+
+    /**
+     * Adds a card to the top of the deck.
+     *
+     * @param card the {@code Card} to be added to the top
+     */
+    public void addCard(Card card) {
+<span class="fc" id="L21">        cards.add(card);</span>
+<span class="fc" id="L22">    }</span>
+
+    /**
+     * Returns a copy of the current list of cards in the deck.
+     * This method returns a new list to preserve encapsulation.
+     *
+     * @return a new {@code List} containing all cards in the deck
+     */
+    public List&lt;Card&gt; getCards() {
+<span class="fc" id="L31">        return new ArrayList&lt;&gt;(cards);</span>
+    }
+
+    /**
+     * Returns the number of cards currently in the deck.
+     *
+     * @return the number of cards in the deck
+     */
+    public int size() {
+<span class="fc" id="L40">        return cards.size();</span>
+    }
+
+    /**
+     * Randomly shuffles the order of cards in the deck.
+     */
+    public void shuffle() {
+<span class="fc" id="L47">        Collections.shuffle(cards);</span>
+<span class="fc" id="L48">    }</span>
+
+    /**
+     * Draws and removes the top card from the deck.
+     * The top of the deck is considered the end of the list.
+     *
+     * @return the drawn {@code Card}
+     * @throws NoSuchElementException if the deck is empty
+     */
+    public Card drawOrThrow() {
+<span class="fc bfc" id="L58" title="All 2 branches covered.">        if (cards.isEmpty()) {</span>
+<span class="fc" id="L59">            throw new NoSuchElementException(&quot;No more cards in deck&quot;);</span>
+        }
+<span class="fc" id="L61">        return cards.remove(cards.size() - 1);</span>
+    }
+
+    /**
+     * Adds a card to the bottom of the deck.
+     * The bottom of the deck is considered the beginning of the list.
+     *
+     * @param card the {@code Card} to be added to the bottom
+     */
+    public void addBottom(Card card) {
+<span class="fc" id="L71">        cards.add(0, card);</span>
+<span class="fc" id="L72">    }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.9.202303310957</span></div></body></html>
